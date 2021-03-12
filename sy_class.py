@@ -1,10 +1,11 @@
 import numpy as np
 from matplotlib.patches import Ellipse
+import matplotlib.pyplot as plt
 import os 
 from astropy.io import fits                                  #package for read/write/save fits files
 from astropy.wcs import WCS
 from scipy.ndimage import gaussian_filter
-
+from scipy.ndimage import median_filter
 
 def iband2fre(Num):  # bandwidth, in units of GHz
     numbers = {
@@ -77,3 +78,73 @@ class AstroMap(object):
             w_p=WCS(hdu.header)
             mat_p=hdu.data
             return mat_p, w_p
+
+def plot_map(mapobj, HDUname, sizeinput=None, filter=None):
+    fig=plt.figure()
+    plt.style.use('science')
+    mat, w = mapobj.getHDU(HDUname)
+    med = np.nanmedian(mat)
+    step= 2e-3
+    ax = fig.add_subplot(111,projection=w)
+    temp=str(mapobj.getHDU(4)['iband']['value'][0])+'-'+str(mapobj.getHDU(4)['iband']['value'][1])+' '+mapobj.getHDU(4)['iband']['unit']
+    feed = int(mapobj.getHDU('Para')['feeds']['value'])
+    cutoff = float(mapobj.getHDU('Para')['cutoff']['value'])
+    if isinstance(sizeinput,int) and isinstance(filter,str):
+        if filter == 'median':
+            ## median filter
+            lim=np.arange(-4*step+ med, 4*step + med, step)
+            mat = median_filter(mat, size = sizeinput)
+            h = ax.contour(mat,lim,origin='lower', cmap='jet')
+            plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nMedian filter size = {sizeinput} pixel')
+        elif filter == 'gaussian':
+            ## gaussian filter
+            lim=np.arange(-10*step+ med, 10*step + med, step/2)
+            mat = gaussian_filter(mat, sizeinput)
+            h = ax.contour(mat,lim,origin='lower', cmap='jet')
+            plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
+    else:
+         ### no filter
+        h = ax.imshow(mat,vmin=-1e-2,vmax=1e-3,origin='lower', cmap='jet')
+        plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
+
+    plt.xlabel('RA')
+    plt.ylabel('DEC')
+    cb=plt.colorbar(h)
+    cb.set_label('T/K')
+    plt.show()
+
+def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None, filter=None):
+    fig=plt.figure()
+    plt.style.use('science')
+    mat1, w = mapobj1.getHDU(HDUname)
+    mat2, w2 = mapobj2.getHDU(HDUname)
+    mat = mat1 - mat2
+    med = np.nanmedian(mat)
+    step= 2e-3
+    ax = fig.add_subplot(111,projection=w)
+    # temp=str(mapobj.getHDU(4)['iband']['value'][0])+'-'+str(mapobj.getHDU(4)['iband']['value'][1])+' '+mapobj.getHDU(4)['iband']['unit']
+    # feed = int(mapobj.getHDU('Para')['feeds']['value'])
+    # cutoff = float(mapobj.getHDU('Para')['cutoff']['value'])
+    if isinstance(sizeinput,int) and isinstance(filter,str):
+        if filter == 'median':
+            ## median filter
+            lim=np.arange(-4*step+ med, 4*step + med, step)
+            mat = median_filter(mat, size = sizeinput)
+            h = ax.contour(mat,lim,origin='lower', cmap='jet')
+            # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nMedian filter size = {sizeinput} pixel')
+        elif filter == 'gaussian':
+            ## gaussian filter
+            lim=np.arange(-10*step+ med, 10*step + med, step/2)
+            mat = gaussian_filter(mat, sizeinput)
+            h = ax.contour(mat,lim,origin='lower', cmap='jet')
+            # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
+    else:
+         ### no filter
+        h = ax.imshow(mat,vmin=-10*step+ med,vmax=5*step + med,origin='lower', cmap='jet')
+        # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
+
+    plt.xlabel('RA')
+    plt.ylabel('DEC')
+    cb=plt.colorbar(h)
+    cb.set_label('T/K')
+    plt.show()
