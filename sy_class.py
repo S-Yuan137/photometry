@@ -17,16 +17,32 @@ def iband2fre(Num):  # bandwidth, in units of GHz
         6 : [33,34],
         7 : [32,33]
     }
-    return numbers.get(Num, np.nan)
+    return numbers.get(int(Num), np.nan)
 
-def get_filename(path,filetype):
+# avoid using np.argsort since the input arguments are lists, even if different length
+def sort_list(list1,list2): #according to list1 to sort two lists
+    zipped=zip(list1,list2)
+    sort_zipped = sorted(zipped,key=lambda x:(x[0]))
+    result = zip(*sort_zipped) # 将 sort_zipped 拆分成两个元组
+    list1_s, list2_s= [list(x) for x in result]
+    return list2_s
+
+def sortbyIband(names, filenames): # defalut format is the last character of names is the iband number
+    iband = [iname[-1] for iname in names]
+    fre_start = [iband2fre(i)[0] for i in iband]
+    return sort_list(fre_start, filenames)
+
+def get_filename_full(path,filetype, onlyname=None):
     name =[]
     final_name = []
     for root,dirs,files in os.walk(path):
         for i in files:
             if filetype in i:
                 name.append(i.replace(filetype,''))#生成不带后缀的文件名组成的列表
-    final_name = [item +filetype for item in name]#生成后缀的文件名组成的列表
+    if onlyname == 1:
+        final_name = [item[:-1]  for item in name]#生成无后缀的文件名组成的列表
+    else:
+        final_name = [path +'/' + item + filetype for item in name]#生成后缀的文件名组成的列表
     return final_name#输出由有后缀的文件名组成的列表
 
 class AstroMap(object):
@@ -61,4 +77,3 @@ class AstroMap(object):
             w_p=WCS(hdu.header)
             mat_p=hdu.data
             return mat_p, w_p
-    

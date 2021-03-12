@@ -1,57 +1,42 @@
 import sy_class
 import matplotlib.pyplot as plt
+import sys
+import numpy as np
+from scipy.ndimage import gaussian_filter
+from scipy.ndimage import median_filter
 
-# def map_plot(fig, ax,map,w,n):
-#     # fig = plt.figure()
-#     # fig.add_subplot(111,projection=w)
-    
-#     if n==0:
-#         vminval=-1*1e-2
-#         vmaxval=1*1e-2
-#         label='T/K'
-#         title='Primary'
-#     elif n==1:
-#         vminval=0*1e-6
-#         vmaxval=5*1e-7
-#         label='Undefine'
-#         title='covariance'
-#     elif n==2:
-#         vminval=-1
-#         vmaxval=1  
-#         label='Undefine'
-#         title='Hit'
-#     elif n==3:
-#         vminval=-1*1e-2
-#         vmaxval=1*1e-2 
-#         label='Undefine'
-#         title='naive'
-                   
-#     h=ax.imshow(map,vmin=vminval,vmax=vmaxval,origin='lower', cmap='jet')
-#     plt.xlabel('RA')
-#     plt.ylabel('DEC')
-#     # plt.title(title)
-#     cb=plt.colorbar(h)
-#     cb.set_label(label)
+cutoff = sys.argv[1]
+sizeinput = int(sys.argv[2])
+freNum = int(sys.argv[3])
+cutoff_str = str(cutoff).replace('-','_')
+path = f"C:/Users/Shibo/Desktop/COMAP-sem2/maps/before_astro_cal/maps{cutoff_str}"
+filenames_un = sy_class.get_filename_full(path, 'fits')
+onlynames = sy_class.get_filename_full(path, 'fits',1)
+filenames = sy_class.sortbyIband(onlynames, filenames_un)
 
-path = r'C:\Users\Shibo\Desktop\COMAP-sem2\maps\maps4e_3'
-filenames = sy_class.get_filename(path, 'fits')
 
-h= plt.figure()
-plt.style.use('science')
-for num, obj in enumerate(filenames):
-    map1 = sy_class.AstroMap(path+'/'+obj)
-    mat, w = map1.getHDU('primary')
-    ax = h.add_subplot(2, 4, num+1,projection=w)
-    # ax = h.add_subplot(2, 4, num+1)
-    # map_plot(h, ax, mat, w, 0)
-    subplot=ax.imshow(mat,vmin=-1e-2,vmax=1e-2,origin='lower', cmap='jet')
-   
+def plot_map(mapobj, HDUname, sizeinput):
+    fig=plt.figure()
+    plt.style.use('science')
+    mat, w = mapobj.getHDU(HDUname)
+    med = np.nanmedian(mat)
+    step= 2e-3
+    ax = fig.add_subplot(111,projection=w)
+    # lim=np.arange(-4*step+ med, 4*step + med, step)
+    # mat = median_filter(mat, size = sizeinput)
+
+    lim=np.arange(-10*step+ med, 10*step + med, step/2)
+    mat = gaussian_filter(mat, sizeinput)
+    h = ax.contour(mat,lim,origin='lower', cmap='jet')
     plt.xlabel('RA')
     plt.ylabel('DEC')
-    temp=str(map1.getHDU(4)['iband']['value'][0])+'~'+str(map1.getHDU(4)['iband']['value'][1])+' '+map1.getHDU(4)['iband']['unit']
+    temp=str(mapobj.getHDU(4)['iband']['value'][0])+'-'+str(mapobj.getHDU(4)['iband']['value'][1])+' '+mapobj.getHDU(4)['iband']['unit']
     plt.title(temp)
-    
-plt.tight_layout()
-cb=plt.colorbar(subplot)
-cb.set_label('T/K')
-plt.show()
+    plt.title(f'feed = 1, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
+    # plt.title(f'feed = 1, cutoff = {cutoff}K' +', '+ temp )
+    cb=plt.colorbar(h)
+    cb.set_label('T/K')
+    plt.show()
+
+map1 = sy_class.AstroMap(filenames[freNum])
+plot_map(map1, 'primary', sizeinput)
