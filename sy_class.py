@@ -57,6 +57,20 @@ def get_name_fromPath(mapname):
     index2 = mapname.index(splitstr2)
     return mapname[index1:index2]
 
+def cut_aper(matrix,centre,rad):
+    Cut=np.array(matrix[centre[1]-rad:centre[1]+rad,centre[0]-rad:centre[0]+rad])
+    for m in np.arange(0,2*rad,1,int):
+        for n in np.arange(0,2*rad,1,int):
+            if (m-rad+0.5)**2+(n-rad+0.5)**2 > rad**2:
+                Cut[m,n]=np.nan
+            else:
+                continue
+    return Cut
+
+def show_aper(ax,centre,rad): # ax is the axes of the current figure
+    ellipse = Ellipse(xy=(centre[0],centre[1]), width = 2*rad, height = 2*rad, angle=0, edgecolor='r', fc='None', lw=2)
+    ax.add_patch(ellipse)
+
 
 class AstroMap(object):
     def __init__(self, name): # name is the path + name of the map
@@ -88,7 +102,6 @@ class AstroMap(object):
             return iband2fre(subStrs[2][4:])
         else:
             print('check the parameter name!')
-
 
 def plot_map(mapobj, HDUname, sizeinput=None):
     fig=plt.figure()
@@ -142,3 +155,21 @@ def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None):
     cb=plt.colorbar(h)
     cb.set_label('T/K')
     plt.show()
+
+def jackknife(mapobj1, centre, rad, mapobj2=None):
+    pri_mat1  = cut_aper(mapobj1.getHDU('primary')[0], centre, rad)
+    cov_mat1  = cut_aper(mapobj1.getHDU('covariance')[0], centre, rad)
+    if isinstance(mapobj2, AstroMap):
+        pri_mat2  = cut_aper(mapobj2.getHDU('primary')[0], centre, rad)
+        # cov_mat2  = cut_aper(mapobj2.getHDU('covariance')[0],centre, rad)
+        diff_mat = pri_mat1 - pri_mat2
+        mean_diff = np.nanmean(diff_mat)
+        std_diff = np.nanstd(diff_mat)
+        return mean_diff, std_diff
+
+    else:
+        mean_single = np.nansum(pri_mat1/cov_mat1)/np.nansum(1/cov_mat1)
+        std_single = np.sqrt(1/np.nansum(1/cov_mat1))
+        return mean_single, std_single
+
+

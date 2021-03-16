@@ -18,8 +18,7 @@ onlynames = sy_class.get_filename_full(path, 'fits',1)
 filenames = sy_class.sortbyIband(onlynames, filenames_un)
 
 map1 = sy_class.AstroMap(filenames[freNum])
-print(filenames[freNum])
-print(map1.getPara('feed'))
+
 map2 = sy_class.AstroMap(filenames[freNum+1])
 # sy_class.plot_map(map1, 'primary')
 # sy_class.plot_map(map1, 'primary',sizeinput)
