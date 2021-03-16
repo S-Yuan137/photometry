@@ -46,6 +46,18 @@ def get_filename_full(path,filetype, onlyname=None):
         final_name = [path +'/' + item + filetype for item in name]#生成后缀的文件名组成的列表
     return final_name#输出由有后缀的文件名组成的列表
 
+def get_name_fromPath(mapname):
+    splitstr1 = '/'
+    splitstr2 = '.'
+    try:
+        index1 = mapname.rindex(splitstr1)+1   
+    except(ValueError):
+        splitstr1 = '\\' # this is for paths of windows system 
+        index1 = mapname.rindex(splitstr1)+1   
+    index2 = mapname.index(splitstr2)
+    return mapname[index1:index2]
+
+
 class AstroMap(object):
     def __init__(self, name): # name is the path + name of the map
         self.name = name
@@ -58,54 +70,46 @@ class AstroMap(object):
         else:
             raw_fits.info() 
     def getHDU(self, hduname):
-        # this if part is for the parameters HDU, maybe changed in the future
-        if hduname == 4 or hduname== 'Para': 
-            hdu=fits.open(self.name)[hduname]
-            # w_p=WCS(hdu.header)
-            para_dict = {}
-            table_p = hdu.data
-            para_names = table_p.columns.names
-            para_units = table_p.columns.units
-            for num,para in enumerate(para_names):
-                if para =='iband': # convert iband to frequency
-                    para_dict.update({para : {'value': iband2fre(int(table_p[para])), 'unit' : 'GHz'}})
-                else:
-                    para_dict.update({para : {'value': table_p[para], 'unit' : para_units[num]}})
-            return para_dict
-
-        else:
             hdu=fits.open(self.name)[hduname]
             w_p=WCS(hdu.header)
             mat_p=hdu.data
             return mat_p, w_p
+    def getPara(self, parametername):
+        tempStr = get_name_fromPath(self.name)
+        spliter = '_'
+        subStrs = tempStr.split(spliter,2)
+        if parametername == 'Source' or parametername == 'source':
+            return subStrs[0]
+        elif parametername == 'Feed' or parametername == 'feed':
+            return [int(i) for i in subStrs[1][5:].split('-')]
+        elif parametername == 'Band' or parametername == 'band':
+            return int(subStrs[2][4:])
+        elif parametername == 'freq' or parametername == 'Freq':
+            return iband2fre(subStrs[2][4:])
+        else:
+            print('check the parameter name!')
 
-def plot_map(mapobj, HDUname, sizeinput=None, filter=None):
+
+def plot_map(mapobj, HDUname, sizeinput=None):
     fig=plt.figure()
     plt.style.use('science')
     mat, w = mapobj.getHDU(HDUname)
     med = np.nanmedian(mat)
     step= 2e-3
     ax = fig.add_subplot(111,projection=w)
-    temp=str(mapobj.getHDU(4)['iband']['value'][0])+'-'+str(mapobj.getHDU(4)['iband']['value'][1])+' '+mapobj.getHDU(4)['iband']['unit']
-    feed = int(mapobj.getHDU('Para')['feeds']['value'])
-    cutoff = float(mapobj.getHDU('Para')['cutoff']['value'])
-    if isinstance(sizeinput,int) and isinstance(filter,str):
-        if filter == 'median':
-            ## median filter
-            lim=np.arange(-4*step+ med, 4*step + med, step)
-            mat = median_filter(mat, size = sizeinput)
-            h = ax.contour(mat,lim,origin='lower', cmap='jet')
-            plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nMedian filter size = {sizeinput} pixel')
-        elif filter == 'gaussian':
-            ## gaussian filter
-            lim=np.arange(-10*step+ med, 10*step + med, step/2)
-            mat = gaussian_filter(mat, sizeinput)
-            h = ax.contour(mat,lim,origin='lower', cmap='jet')
-            plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
+    # temp=str(mapobj.getHDU(4)['iband']['value'][0])+'-'+str(mapobj.getHDU(4)['iband']['value'][1])+' '+mapobj.getHDU(4)['iband']['unit']
+    # feed = int(mapobj.getHDU('Para')['feeds']['value'])
+    # cutoff = float(mapobj.getHDU('Para')['cutoff']['value'])
+    if isinstance(sizeinput,int) :
+        ## gaussian filter
+        lim=np.arange(-10*step+ med, 10*step + med, step/2)
+        mat = gaussian_filter(mat, sizeinput)
+        h = ax.contour(mat,lim,origin='lower', cmap='jet')
+        # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
     else:
-         ### no filter
+        ### no filter
         h = ax.imshow(mat,vmin=-1e-2,vmax=1e-3,origin='lower', cmap='jet')
-        plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
+        # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
 
     plt.xlabel('RA')
     plt.ylabel('DEC')
@@ -113,7 +117,7 @@ def plot_map(mapobj, HDUname, sizeinput=None, filter=None):
     cb.set_label('T/K')
     plt.show()
 
-def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None, filter=None):
+def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None):
     fig=plt.figure()
     plt.style.use('science')
     mat1, w = mapobj1.getHDU(HDUname)
@@ -122,22 +126,12 @@ def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None, filter=None):
     med = np.nanmedian(mat)
     step= 2e-3
     ax = fig.add_subplot(111,projection=w)
-    # temp=str(mapobj.getHDU(4)['iband']['value'][0])+'-'+str(mapobj.getHDU(4)['iband']['value'][1])+' '+mapobj.getHDU(4)['iband']['unit']
-    # feed = int(mapobj.getHDU('Para')['feeds']['value'])
-    # cutoff = float(mapobj.getHDU('Para')['cutoff']['value'])
     if isinstance(sizeinput,int) and isinstance(filter,str):
-        if filter == 'median':
-            ## median filter
-            lim=np.arange(-4*step+ med, 4*step + med, step)
-            mat = median_filter(mat, size = sizeinput)
-            h = ax.contour(mat,lim,origin='lower', cmap='jet')
-            # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nMedian filter size = {sizeinput} pixel')
-        elif filter == 'gaussian':
-            ## gaussian filter
-            lim=np.arange(-10*step+ med, 10*step + med, step/2)
-            mat = gaussian_filter(mat, sizeinput)
-            h = ax.contour(mat,lim,origin='lower', cmap='jet')
-            # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
+        ## gaussian filter
+        lim=np.arange(-10*step+ med, 10*step + med, step/2)
+        mat = gaussian_filter(mat, sizeinput)
+        h = ax.contour(mat,lim,origin='lower', cmap='jet')
+        # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
     else:
          ### no filter
         h = ax.imshow(mat,vmin=-10*step+ med,vmax=5*step + med,origin='lower', cmap='jet')
