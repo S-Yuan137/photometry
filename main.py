@@ -20,6 +20,11 @@ filenames = sy_class.sortbyIband(onlynames, filenames_un)
 map1 = sy_class.AstroMap(filenames[freNum])
 
 map2 = sy_class.AstroMap(filenames[freNum+1])
+
+print(sy_class.jackknife(map1,[240,240],15))
+print(sy_class.jackknife(map1,[240,240],15, map2))
+
+
 # sy_class.plot_map(map1, 'primary')
 # sy_class.plot_map(map1, 'primary',sizeinput)
 # sy_class.plot_diffmap(map1,map2, 'primary')
