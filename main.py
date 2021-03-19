@@ -22,8 +22,12 @@ feeds = []
 for i, onemap_i in enumerate(mapobjs):
     feeds.append(onemap_i.getPara('feed'))
     for j, onemap_j in enumerate(mapobjs):
-        mean_mat[i,j] = sy_class.jackknife(onemap_i,[240,240],10,onemap_j)[0]
-        std_mat[i,j] = sy_class.jackknife(onemap_i,[240,240],10,onemap_j)[1]
+        mean_mat[i,j], std_mat[i,j] = sy_class.jackknife(onemap_i,[240,240],20,onemap_j)
+        # std_mat[i,j] = (sy_class.jackknife(onemap_i,[240,240],20,onemap_j)[1]+
+        # sy_class.jackknife(onemap_i,[180,280],20,onemap_j)[1]+
+        # sy_class.jackknife(onemap_i,[180,200],20,onemap_j)[1]+
+        # sy_class.jackknife(onemap_i,[300,280],20,onemap_j)[1]+
+        # sy_class.jackknife(onemap_i,[300,200],20,onemap_j)[1])/5
 feeds = np.array(feeds)
 fig = plt.figure()
 h=plt.imshow(abs(mean_mat), cmap='jet')
@@ -47,3 +51,5 @@ plt.title('Jackknife: STD')
 cb=plt.colorbar(h)
 cb.set_label('T/K')
 plt.show()
+
+

@@ -78,7 +78,7 @@ def cut_aper(matrix,centre,rad):
     return Cut
 
 def show_aper(ax,centre,rad): # ax is the axes of the current figure
-    ellipse = Ellipse(xy=(centre[0],centre[1]), width = 2*rad, height = 2*rad, angle=0, edgecolor='r', fc='None', lw=2)
+    ellipse = Ellipse(xy=(centre[0],centre[1]), width = 2*rad, height = 2*rad, angle=0, edgecolor='b', fc='None', lw=2)
     ax.add_patch(ellipse)
 
 
@@ -164,6 +164,11 @@ def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None):
     plt.ylabel('DEC')
     cb=plt.colorbar(h)
     cb.set_label('T/K')
+    # show_aper(ax,[240,240],20)
+    # show_aper(ax,[180,280],20)
+    # show_aper(ax,[180,200],20)
+    # show_aper(ax,[300,280],20)
+    # show_aper(ax,[300,200],20)
     plt.show()
 
 def jackknife(mapobj1, centre, rad, mapobj2=None):
