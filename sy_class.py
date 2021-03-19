@@ -25,13 +25,23 @@ def sort_list(list1,list2): #according to list1 to sort two lists
     zipped=zip(list1,list2)
     sort_zipped = sorted(zipped,key=lambda x:(x[0]))
     result = zip(*sort_zipped) # 将 sort_zipped 拆分成两个元组
-    list1_s, list2_s= [list(x) for x in result]
+    # list1_s, list2_s= [list(x) for x in result]
+    list2_s= [list(x) for x in result][1]
     return list2_s
 
 def sortbyIband(names, filenames): # defalut format is the last character of names is the iband number
     iband = [iname[-1] for iname in names]
     fre_start = [iband2fre(i)[0] for i in iband]
     return sort_list(fre_start, filenames)
+
+def sortbyFeed(names, filenames):
+    spliter = '_'
+    feeds = []
+    for onename in names:
+        subStrs = onename.split(spliter,2)
+        feeds.append([int(i) for i in subStrs[1][5:].split('-')])
+    return sort_list(feeds, filenames)
+    
 
 def get_filename_full(path,filetype, onlyname=None):
     name =[]
