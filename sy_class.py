@@ -140,37 +140,56 @@ def plot_map(mapobj, HDUname, sizeinput=None):
     cb.set_label('T/K')
     plt.show()
 
-def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None):
+# def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None):
+#     fig=plt.figure()
+#     plt.style.use('science')
+#     mat1, w = mapobj1.getHDU(HDUname)
+#     mat2, w2 = mapobj2.getHDU(HDUname)
+#     mat = mat1 - mat2
+#     med = np.nanmedian(mat)
+#     step= 2e-3
+#     ax = fig.add_subplot(111,projection=w)
+#     if isinstance(sizeinput,int) and isinstance(filter,str):
+#         ## gaussian filter
+#         lim=np.arange(-10*step+ med, 10*step + med, step/2)
+#         mat = gaussian_filter(mat, sizeinput)
+#         h = ax.contour(mat,lim,origin='lower', cmap='jet')
+#         # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
+#     else:
+#          ### no filter
+#         h = ax.imshow(mat,vmin=-10*step+ med,vmax=5*step + med,origin='lower', cmap='jet')
+#         # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
+
+#     plt.xlabel('RA')
+#     plt.ylabel('DEC')
+#     cb=plt.colorbar(h)
+#     cb.set_label('T/K')
+#     show_aper(ax,[240,240],80)
+#     show_aper(ax,[240,240],5)
+#     # show_aper(ax,[180,280],20)
+#     # show_aper(ax,[180,200],20)
+#     # show_aper(ax,[300,280],20)
+#     # show_aper(ax,[300,200],20)
+#     plt.show()
+def plot_diffmap(mapobj1, mapobj2, centre, radius):
     fig=plt.figure()
     plt.style.use('science')
-    mat1, w = mapobj1.getHDU(HDUname)
-    mat2, w2 = mapobj2.getHDU(HDUname)
+    mat1, w = mapobj1.getHDU('primary')
+    mat2  = mapobj2.getHDU('primary')[0]
     mat = mat1 - mat2
     med = np.nanmedian(mat)
     step= 2e-3
     ax = fig.add_subplot(111,projection=w)
-    if isinstance(sizeinput,int) and isinstance(filter,str):
-        ## gaussian filter
-        lim=np.arange(-10*step+ med, 10*step + med, step/2)
-        mat = gaussian_filter(mat, sizeinput)
-        h = ax.contour(mat,lim,origin='lower', cmap='jet')
-        # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
-    else:
-         ### no filter
-        h = ax.imshow(mat,vmin=-10*step+ med,vmax=5*step + med,origin='lower', cmap='jet')
-        # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
-
+    ### no filter
+    h = ax.imshow(mat,vmin=-10*step+ med,vmax=5*step + med,origin='lower', cmap='jet')
+    # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
     plt.xlabel('RA')
     plt.ylabel('DEC')
     cb=plt.colorbar(h)
     cb.set_label('T/K')
-    show_aper(ax,[240,240],80)
-    show_aper(ax,[240,240],5)
-    # show_aper(ax,[180,280],20)
-    # show_aper(ax,[180,200],20)
-    # show_aper(ax,[300,280],20)
-    # show_aper(ax,[300,200],20)
-    plt.show()
+    show_aper(ax,centre,radius)
+
+
 
 def jackknife(mapobj1, centre, rad, mapobj2=None):
     pri_mat1  = cut_aper(mapobj1.getHDU('primary')[0], centre, rad)
