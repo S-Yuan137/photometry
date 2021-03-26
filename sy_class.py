@@ -164,7 +164,8 @@ def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None):
     plt.ylabel('DEC')
     cb=plt.colorbar(h)
     cb.set_label('T/K')
-    # show_aper(ax,[240,240],20)
+    show_aper(ax,[240,240],80)
+    show_aper(ax,[240,240],5)
     # show_aper(ax,[180,280],20)
     # show_aper(ax,[180,200],20)
     # show_aper(ax,[300,280],20)
@@ -186,5 +187,6 @@ def jackknife(mapobj1, centre, rad, mapobj2=None):
         mean_single = np.nansum(pri_mat1/cov_mat1)/np.nansum(1/cov_mat1)
         std_single = np.sqrt(1/np.nansum(1/cov_mat1))
         return mean_single, std_single
+
 
 

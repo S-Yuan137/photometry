@@ -22,7 +22,11 @@ feeds = []
 for i, onemap_i in enumerate(mapobjs):
     feeds.append(onemap_i.getPara('feed'))
     for j, onemap_j in enumerate(mapobjs):
-        mean_mat[i,j], std_mat[i,j] = sy_class.jackknife(onemap_i,[240,240],20,onemap_j)
+        if i != j:
+            mean_mat[i,j], std_mat[i,j] = sy_class.jackknife(onemap_i,[240,240],40,onemap_j)
+        else:
+            mean_mat[i,j] = np.nan
+            std_mat[i,j] = np.nan
         # std_mat[i,j] = (sy_class.jackknife(onemap_i,[240,240],20,onemap_j)[1]+
         # sy_class.jackknife(onemap_i,[180,280],20,onemap_j)[1]+
         # sy_class.jackknife(onemap_i,[180,200],20,onemap_j)[1]+
