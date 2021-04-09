@@ -194,18 +194,25 @@ def plot_diffmap(mapobj1, mapobj2, centre, radius):
 def jackknife(mapobj1, centre, rad, mapobj2=None):
     pri_mat1  = cut_aper(mapobj1.getHDU('primary')[0], centre, rad)
     cov_mat1  = cut_aper(mapobj1.getHDU('covariance')[0], centre, rad)
+    hit_mat1  = cut_aper(mapobj1.getHDU('hits')[0],centre,rad)
+    integral_time = np.nansum(hit_mat1)/50   # sample rate is 50 Hz
     if isinstance(mapobj2, AstroMap):
         pri_mat2  = cut_aper(mapobj2.getHDU('primary')[0], centre, rad)
+        # hit_mat2  = cut_aper(mapobj2.getHDU('hits')[0],centre,rad)
+        # integral_time2 = np.nansum(hit_mat2)/50 
         # cov_mat2  = cut_aper(mapobj2.getHDU('covariance')[0],centre, rad)
         diff_mat = pri_mat1 - pri_mat2
         mean_diff = np.nanmean(diff_mat)
         std_diff = np.nanstd(diff_mat)
+        # std_diff = np.nanstd(diff_mat)  # rms over intergal time
         return mean_diff, std_diff
 
     else:
         mean_single = np.nansum(pri_mat1/cov_mat1)/np.nansum(1/cov_mat1)
-        std_single = np.sqrt(1/np.nansum(1/cov_mat1))
-        return mean_single, std_single
+        std_single = np.sqrt(1/np.nansum(1/cov_mat1)) # this is the std calculated from the covariance map
+        std_pixel = np.nanstd(pri_mat1)  # this is the std calculated from the pixel values
+        return mean_single, std_single, std_pixel
 
+# def photometry(mapobj, centre):
 
 

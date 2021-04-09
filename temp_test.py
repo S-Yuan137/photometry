@@ -11,9 +11,9 @@ map1 = sy_class.AstroMap(path1)
 map2 = sy_class.AstroMap(path2)
 aperlist = np.arange(5,40,1)
 std =[]
-centre =  [360,240]
+centre =  [240,240]
 for aper in aperlist:
-    std.append(sy_class.jackknife(map1, centre,aper, map2)[1])
+    std.append(sy_class.jackknife(map1, centre,aper,map2)[1])
 
 fig = plt.figure()
 h=plt.plot(aperlist,std, '*')
