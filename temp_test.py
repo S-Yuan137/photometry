@@ -3,28 +3,38 @@ import matplotlib.pyplot as plt
 import sys
 import numpy as np
 
-path1 = f"C:/Users/Shibo/Desktop/COMAP-sem2/week7/fg4_Feeds1-11-14-15-17-18_Band0_half0.fits"
-path2 = f"C:/Users/Shibo/Desktop/COMAP-sem2/week7/fg4_Feeds1-11-14-15-17-18_Band0_half1.fits"
+def Source(name, mapobjList, centre, size, theta, width):
+    freq = []
+    flux = []
+    flux_err = []
+    for onemap in mapobjList:
+        result = sy_class.photometry(onemap, centre, size[0], size[1], theta, width)
+        freq.append(np.mean(onemap.getPara('freq')))
+        flux.append(result['aper_sum_bkgsub_Jy'])
+        flux_err.append(result['bkg_rms_Jy'])
+    return {'name':name, 'freq':np.array(freq),'flux':np.array(flux),'flux_err':np.array(flux_err)[:,0]}
 
 
-map1 = sy_class.AstroMap(path1)
-map2 = sy_class.AstroMap(path2)
-aperlist = np.arange(5,40,1)
-std =[]
-centre =  [240,240]
-for aper in aperlist:
-    std.append(sy_class.jackknife(map1, centre,aper,map2)[1])
 
-fig = plt.figure()
-h=plt.plot(aperlist,std, '*')
-# plt.xticks(np.arange(0,17),labels=feeds)
-plt.xlabel('Aperture radius/arcmin')
-# plt.yticks(np.arange(0,17),labels=feeds)
-plt.ylabel('STD/K')
-plt.title('Jackknife: STD')
+path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week9/maps/feed1"
 
+filenames_un = sy_class.get_filename_full(path, 'fits')
+onlynames = sy_class.get_filename_full(path, 'fits',1)
+filenames = sy_class.sortbyFeed(onlynames, filenames_un)
+mapnames = [sy_class.get_name_fromPath(fname) for fname in filenames]
+mapobjs = []
+for onefile in filenames:
+    mapobjs.append(sy_class.AstroMap(onefile))
 
-sy_class.plot_diffmap(map1,map2,centre, aperlist[-1])
+centre = np.array([9.6076856,41.6096426])
+size = np.array([6,6])
+theta = 0
+width = 2
 
+obj = Source('5C3.50',mapobjs,centre, size, theta, width)
+print(sy_class.s_index(obj))
+print(sy_class.chi_sqare(obj))
+sy_class.sp_plot(obj)
+# sy_class.fitting_plot(obj)
+plt.legend()
 plt.show()
-

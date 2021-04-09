@@ -6,6 +6,12 @@ from astropy.io import fits                                  #package for read/w
 from astropy.wcs import WCS
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage import median_filter
+from photutils import CircularAperture                      # package for define the aperture
+from photutils import aperture_photometry                   # package for photometry
+from photutils import EllipticalAperture
+from photutils import EllipticalAnnulus
+from astropy.stats import sigma_clipped_stats
+from math import e
 
 def iband2fre(Num):  # bandwidth, in units of GHz
     numbers = {
@@ -101,7 +107,7 @@ class AstroMap(object):
     def getPara(self, parametername):
         tempStr = get_name_fromPath(self.name)
         spliter = '_'
-        subStrs = tempStr.split(spliter,2)
+        subStrs = tempStr.split(spliter)
         if parametername == 'Source' or parametername == 'source':
             return subStrs[0]
         elif parametername == 'Feed' or parametername == 'feed':
@@ -110,6 +116,8 @@ class AstroMap(object):
             return int(subStrs[2][4:])
         elif parametername == 'freq' or parametername == 'Freq':
             return iband2fre(subStrs[2][4:])
+        elif parametername == 'attr' or parametername == 'Attr':
+            return subStrs[-1]
         else:
             print('check the parameter name!')
 
@@ -140,37 +148,7 @@ def plot_map(mapobj, HDUname, sizeinput=None):
     cb.set_label('T/K')
     plt.show()
 
-# def plot_diffmap(mapobj1, mapobj2, HDUname, sizeinput=None):
-#     fig=plt.figure()
-#     plt.style.use('science')
-#     mat1, w = mapobj1.getHDU(HDUname)
-#     mat2, w2 = mapobj2.getHDU(HDUname)
-#     mat = mat1 - mat2
-#     med = np.nanmedian(mat)
-#     step= 2e-3
-#     ax = fig.add_subplot(111,projection=w)
-#     if isinstance(sizeinput,int) and isinstance(filter,str):
-#         ## gaussian filter
-#         lim=np.arange(-10*step+ med, 10*step + med, step/2)
-#         mat = gaussian_filter(mat, sizeinput)
-#         h = ax.contour(mat,lim,origin='lower', cmap='jet')
-#         # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
-#     else:
-#          ### no filter
-#         h = ax.imshow(mat,vmin=-10*step+ med,vmax=5*step + med,origin='lower', cmap='jet')
-#         # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
 
-#     plt.xlabel('RA')
-#     plt.ylabel('DEC')
-#     cb=plt.colorbar(h)
-#     cb.set_label('T/K')
-#     show_aper(ax,[240,240],80)
-#     show_aper(ax,[240,240],5)
-#     # show_aper(ax,[180,280],20)
-#     # show_aper(ax,[180,200],20)
-#     # show_aper(ax,[300,280],20)
-#     # show_aper(ax,[300,200],20)
-#     plt.show()
 def plot_diffmap(mapobj1, mapobj2, centre, radius):
     fig=plt.figure()
     plt.style.use('science')
@@ -190,12 +168,11 @@ def plot_diffmap(mapobj1, mapobj2, centre, radius):
     show_aper(ax,centre,radius)
 
 
-
 def jackknife(mapobj1, centre, rad, mapobj2=None):
     pri_mat1  = cut_aper(mapobj1.getHDU('primary')[0], centre, rad)
     cov_mat1  = cut_aper(mapobj1.getHDU('covariance')[0], centre, rad)
-    hit_mat1  = cut_aper(mapobj1.getHDU('hits')[0],centre,rad)
-    integral_time = np.nansum(hit_mat1)/50   # sample rate is 50 Hz
+    # hit_mat1  = cut_aper(mapobj1.getHDU('hits')[0],centre,rad)
+    # integral_time = np.nansum(hit_mat1)/50   # sample rate is 50 Hz
     if isinstance(mapobj2, AstroMap):
         pri_mat2  = cut_aper(mapobj2.getHDU('primary')[0], centre, rad)
         # hit_mat2  = cut_aper(mapobj2.getHDU('hits')[0],centre,rad)
@@ -213,6 +190,150 @@ def jackknife(mapobj1, centre, rad, mapobj2=None):
         std_pixel = np.nanstd(pri_mat1)  # this is the std calculated from the pixel values
         return mean_single, std_single, std_pixel
 
-# def photometry(mapobj, centre):
+def T2flux(Temperture, freq):
+    # freq in units of GHz, 
+    # return is the flux density in Jys
+    factor = 2.59971*10**-3
+    return factor*freq**2*Temperture
 
+def photometry(mapobj, centre, a_ellipse, b_ellipse, theta, annulus_width):
+    '''
+    photometry function：
+    centre:
+    centre is a pair of numbers in units of degrees which is the loacation of objects
 
+    a_ellipse:
+    the semi-major axis in pixels
+
+    b_ellipse:
+    the semi-minor axis
+
+    theta:
+    The rotation angle in radians of the ellipse semimajor axis from the positive x axis.
+    The rotation angle increases counterclockwise. The default is 0.
+    '''
+    distance_annu_aper = 2  # the distance between the aperture and the annulus in units of pixels
+    pri_data, wcs_data = mapobj.getHDU('primary')
+    Freq = np.nanmean(mapobj.getPara('freq'))
+    x_pix,y_pix = wcs_data.wcs_world2pix(centre[0],centre[1],0)
+    centre_pix = [(x_pix, y_pix)]
+
+    aperture = EllipticalAperture(centre_pix, a_ellipse, b_ellipse, theta)
+    annulus_aperture = EllipticalAnnulus(centre_pix, a_ellipse+distance_annu_aper, a_ellipse+annulus_width+distance_annu_aper, 
+    b_ellipse+annulus_width+distance_annu_aper, theta=theta)
+    annulus_masks = annulus_aperture.to_mask(method='center')
+    bkg_median = []
+    bkg_std =[]
+    for mask in annulus_masks:
+        annulus_data = mask.multiply(pri_data)
+        annulus_data_1d = annulus_data[mask.data > 0]
+        _, median_sigclip, _ = sigma_clipped_stats(annulus_data_1d)
+        bkg_median.append(median_sigclip)
+        bkg_std.append(np.nanstd(annulus_data_1d))
+    bkg_median = np.array(bkg_median)
+    bkg_std = np.array(bkg_std)
+    phot_table = aperture_photometry(pri_data, aperture)
+    phot_table['annulus_median'] = bkg_median
+    phot_table['aper_bkg'] = bkg_median * aperture.area
+    phot_table['aper_sum_bkgsub'] = phot_table['aperture_sum'] - phot_table['aper_bkg']
+    phot_table['aper_sum_bkgsub_Jy'] = T2flux(phot_table['aper_sum_bkgsub'], Freq)
+    phot_table['bkg_rms_Jy']= T2flux(bkg_std,Freq)
+
+    for col in phot_table.colnames:
+        phot_table[col].info.format = '%.8g'  # for consistent table output
+    return phot_table
+
+# 定义计算离散点导数的函数
+def cal_deriv(x, y):                  # x, y的类型均为列表
+    diff_x = []                       # 用来存储x列表中的两数之差
+    for i, j in zip(x[0::], x[1::]):  
+        diff_x.append(j - i)
+ 
+    diff_y = []                       # 用来存储y列表中的两数之差
+    for i, j in zip(y[0::], y[1::]):
+        diff_y.append(j - i)  
+        
+    slopes = []                       # 用来存储斜率
+    for i in range(len(diff_y)):
+        slopes.append(diff_y[i] / diff_x[i])
+        
+    deriv = []                        # 用来存储一阶导数
+    for i, j in zip(slopes[0::], slopes[1::]):        
+        deriv.append((0.5 * (i + j))) # 根据离散点导数的定义，计算并存储结果
+    deriv.insert(0, slopes[0])        # (左)端点的导数即为与其最近点的斜率
+    deriv.append(slopes[-1])          # (右)端点的导数即为与其最近点的斜率
+
+    return deriv                      # 返回存储一阶导数结果的列表
+
+def sp_plot(source):
+    fre=source['freq']
+    flux=source['flux']
+    flux_err=source['flux_err']
+    plt.figure()
+    plt.style.use('science')
+    plt.errorbar(fre,flux,yerr = flux_err,fmt='o',ecolor='r',color='b',elinewidth=2,capthick=2,capsize=4,markersize=6,label='Photometry data')
+    plt.xlabel('Frequency/GHz')
+    plt.ylabel('Flux Density/Jy')
+    # plt.title(source['name'])
+def fitting_plot(source):
+    index=s_index(source)
+    temp=para(source)
+    # fre=source['fre']
+    fre=np.linspace(26,34,20)
+    plt.plot(fre,np.power(fre,index[0])*np.power(e,temp[0]),'b--',linewidth=2,label='Fitting')
+# calculate the chi^2/degree of freedom to evaluate the fitting quality    
+def chi_sqare(source):
+    index=s_index(source)
+    temp=para(source)
+    fre=source['freq']
+    flux=source['flux']
+    flux_err=source['flux_err']
+    flux_fitting=np.power(fre,index[0])*np.power(e,temp[0])
+    chi_s=np.sum(np.power((flux_fitting-flux)/flux_err,2))
+    chi_s_Ndof=chi_s/2
+    return chi_s_Ndof
+# Y = beta1 * X + beta0, this is beta1
+# compute the spectral index and its error
+def s_index(source):
+    fre=source['freq']
+    flux=source['flux']
+    flux_err=source['flux_err']
+    lnfre=np.log(fre)
+    lnflux=np.log(flux)
+    lnflux_err=np.abs(flux_err/flux)
+    alpha_value=ordinary_least_squares(lnfre,lnflux)[0]
+    alpha_err=ordinary_least_squares_err(lnfre,lnflux,lnflux_err)[0]
+    alpha=np.array([alpha_value,alpha_err])
+    return alpha
+# Y = beta1 * X + beta0, this is beta0
+def para(source):
+    fre=source['freq']
+    flux=source['flux']
+    flux_err=source['flux_err']
+    lnfre=np.log(fre)
+    lnflux=np.log(flux)
+    lnflux_err=np.abs(flux_err/flux)
+    para_value=ordinary_least_squares(lnfre,lnflux)[1]
+    para_err=ordinary_least_squares_err(lnfre,lnflux,lnflux_err)[1]
+    para=np.array([para_value,para_err])
+    return para
+#  Y = beta1 * X + beta0
+#  Y has errors: Y_err
+def ordinary_least_squares(X,Y):  
+    X_mean=np.mean(X)
+    Y_mean=np.mean(Y)
+    beta1=np.sum((X-X_mean)*(Y-Y_mean))/np.sum(np.power(X-X_mean,2))
+    beta0=Y_mean-beta1*X_mean
+    return beta1,beta0
+# calculate the err of least square fitting 
+def ordinary_least_squares_err(X,Y,Y_err):
+    X_mean=np.mean(X)
+    Y_mean=np.mean(Y)
+    Y_mean_rms=1/len(Y_err)*np.sqrt(np.sum(np.power(Y_err,2)))
+    # beta1_rms=1/A*sqrt(B)
+    A=np.sum(np.power(X-X_mean,2))
+    B=np.sum(np.power((X-X_mean)*Y_err,2))
+    beta1_rms=1/A*np.sqrt(B)
+    beta0_rms=np.sqrt(np.power(Y_mean_rms,2)+np.power(beta1_rms,2))
+    return beta1_rms, beta0_rms
+    
