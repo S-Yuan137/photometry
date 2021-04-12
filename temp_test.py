@@ -1,4 +1,5 @@
 import sy_class
+import stats_tools
 import matplotlib.pyplot as plt
 import sys
 import numpy as np
@@ -16,7 +17,7 @@ def Source(name, mapobjList, centre, size, theta, width):
 
 
 
-path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week9/maps/feed1"
+path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week9/maps/feed3_old"
 
 filenames_un = sy_class.get_filename_full(path, 'fits')
 onlynames = sy_class.get_filename_full(path, 'fits',1)
@@ -32,9 +33,9 @@ theta = 0
 width = 2
 
 obj = Source('5C3.50',mapobjs,centre, size, theta, width)
-print(sy_class.s_index(obj))
-print(sy_class.chi_sqare(obj))
+print(stats_tools.s_index(obj))
+print(stats_tools.chi_sqare(obj))
 sy_class.sp_plot(obj)
-# sy_class.fitting_plot(obj)
+sy_class.fitting_plot(obj)
 plt.legend()
 plt.show()
