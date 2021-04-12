@@ -27,6 +27,7 @@ mapobjs = []
 for onefile in filenames:
     mapobjs.append(sy_class.AstroMap(onefile))
 
+
 centre = np.array([9.6076856,41.6096426])
 size = np.array([6,6])
 theta = 0

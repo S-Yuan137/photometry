@@ -53,7 +53,8 @@ def sortbyFeed(names, filenames):
 def get_filename_full(path,filetype, onlyname=None):
     name =[]
     final_name = []
-    for root,dirs,files in os.walk(path):
+    # for root,dirs,files in os.walk(path):
+    for _,_,files in os.walk(path):
         for i in files:
             if filetype in i:
                 name.append(i.replace(filetype,''))#生成不带后缀的文件名组成的列表
@@ -262,3 +263,24 @@ def fitting_plot(source):
     fre=np.linspace(26,34,20)
     plt.plot(fre,np.power(fre,index[0])*np.power(e,temp[0]),'b--',linewidth=2,label='Fitting')
 
+def T_Tplot(mapobj1, mapobj2):
+    data1, wcs1 = mapobj1.getHDU('primary')
+    data2, wcs2 = mapobj2.getHDU('primary')
+    data1 = cut_aper(data1, [240,240],40)
+    data2 = cut_aper(data2, [240,240],40)
+    list1, list2 = stats_tools.pairFrom2mat(data1,data2)
+    plt.figure()
+    plt.plot(list1, list2,'.')
+    plt.show()
+    
+if __name__ == '__main__':
+    path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week9/maps/feed3_old"
+
+    filenames_un = get_filename_full(path, 'fits')
+    onlynames = get_filename_full(path, 'fits',1)
+    filenames = sortbyIband(onlynames, filenames_un)
+    mapnames = [get_name_fromPath(fname) for fname in filenames]
+    mapobjs = []
+    for onefile in filenames:
+        mapobjs.append(AstroMap(onefile))
+    T_Tplot(mapobjs[0],mapobjs[5])
