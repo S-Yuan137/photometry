@@ -214,7 +214,7 @@ def photometry(mapobj, centre, a_ellipse, b_ellipse, theta, annulus_width):
     The rotation angle in radians of the ellipse semimajor axis from the positive x axis.
     The rotation angle increases counterclockwise. The default is 0.
     '''
-    distance_annu_aper = 2  # the distance between the aperture and the annulus in units of pixels
+    distance_annu_aper = 5  # the distance between the aperture and the annulus in units of pixels
     pri_data, wcs_data = mapobj.getHDU('primary')
     Freq = np.nanmean(mapobj.getPara('freq'))
     x_pix,y_pix = wcs_data.wcs_world2pix(centre[0],centre[1],0)
@@ -274,13 +274,36 @@ def T_Tplot(mapobj1, mapobj2):
     plt.show()
     
 if __name__ == '__main__':
-    path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week9/maps/feed3_old"
+    path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/EachFeedmaps/maps"
 
     filenames_un = get_filename_full(path, 'fits')
     onlynames = get_filename_full(path, 'fits',1)
-    filenames = sortbyIband(onlynames, filenames_un)
+    filenames = sortbyFeed(onlynames, filenames_un)
     mapnames = [get_name_fromPath(fname) for fname in filenames]
     mapobjs = []
+    feeds = []
+    mean = []
+    std_p = []
+    std_c = [] 
     for onefile in filenames:
         mapobjs.append(AstroMap(onefile))
-    T_Tplot(mapobjs[0],mapobjs[5])
+    # T_Tplot(mapobjs[0],mapobjs[5])
+    for onemap in mapobjs:
+        feeds.append(onemap.getPara('feed'))
+        mean.append((jackknife(onemap, [240,240], 40)[0]+
+                    jackknife(onemap,[180,280],40)[0]+
+                    jackknife(onemap,[180,200],40)[0]+
+                    jackknife(onemap,[300,280],40)[0]+
+                    jackknife(onemap,[300,200],40)[0])/5)
+        # std_c.append(jackknife(onemap,[240,240], 40)[1])
+        std_p.append((jackknife(onemap, [240,240], 40)[2]+
+                        jackknife(onemap,[180,280],40)[2]+
+                        jackknife(onemap,[180,200],40)[2]+
+                        jackknife(onemap,[300,280],40)[2]+
+                        jackknife(onemap,[300,200],40)[2])/5)
+    # feeds = np.array(feeds)
+    for std in mean:
+        print(std)
+
+
+    
