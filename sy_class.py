@@ -49,7 +49,6 @@ def sortbyFeed(names, filenames):
         feeds.append([int(i) for i in subStrs[1][5:].split('-')])
     return sort_list(feeds, filenames)
     
-
 def get_filename_full(path,filetype, onlyname=None):
     name =[]
     final_name = []
