@@ -5,7 +5,8 @@ import numpy as np
 
 
 # path = f"C:/Users/Shibo/Desktop/COMAP-sem2/maps/before_astro_cal/maps{cutoff_str}"
-path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/EachFeedmaps/maps"
+# path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/EachFeedmaps/maps" # this is the all dataset
+path = f"C:/Users/Shibo/Desktop/COMAP-sem2/maps/after_astro_cal/maps/band0" # old dataset with tauA cal.
 filenames_un = sy_class.get_filename_full(path, 'fits')
 onlynames = sy_class.get_filename_full(path, 'fits',1)
 # filenames = sy_class.sortbyIband(onlynames, filenames_un)

@@ -169,7 +169,6 @@ def plot_diffmap(mapobj1, mapobj2, centre, radius):
     cb.set_label('T/K')
     show_aper(ax,centre,radius)
 
-
 def jackknife(mapobj1, centre, rad, mapobj2=None):
     pri_mat1  = cut_aper(mapobj1.getHDU('primary')[0], centre, rad)
     cov_mat1  = cut_aper(mapobj1.getHDU('covariance')[0], centre, rad)
@@ -188,7 +187,7 @@ def jackknife(mapobj1, centre, rad, mapobj2=None):
 
     else:
         mean_single = np.nansum(pri_mat1/cov_mat1)/np.nansum(1/cov_mat1)
-        std_single = np.sqrt(1/np.nansum(1/cov_mat1)) # this is the std calculated from the covariance map
+        std_single = np.sqrt(np.nansum(cov_mat1)) # this is the std calculated from the covariance map
         std_pixel = np.nanstd(pri_mat1)  # this is the std calculated from the pixel values
         return mean_single, std_single, std_pixel
 
@@ -216,6 +215,8 @@ def photometry(mapobj, centre, a_ellipse, b_ellipse, theta, annulus_width):
     '''
     distance_annu_aper = 5  # the distance between the aperture and the annulus in units of pixels
     pri_data, wcs_data = mapobj.getHDU('primary')
+    cov_data,_ = mapobj.getHDU('covariance')
+    
     Freq = np.nanmean(mapobj.getPara('freq'))
     x_pix,y_pix = wcs_data.wcs_world2pix(centre[0],centre[1],0)
     centre_pix = [(x_pix, y_pix)]
@@ -223,6 +224,7 @@ def photometry(mapobj, centre, a_ellipse, b_ellipse, theta, annulus_width):
     aperture = EllipticalAperture(centre_pix, a_ellipse, b_ellipse, theta)
     annulus_aperture = EllipticalAnnulus(centre_pix, a_ellipse+distance_annu_aper, a_ellipse+annulus_width+distance_annu_aper, 
     b_ellipse+annulus_width+distance_annu_aper, theta=theta)
+    temp_mask = aperture.to_mask(method= 'center')
     annulus_masks = annulus_aperture.to_mask(method='center')
     bkg_median = []
     bkg_std =[]
@@ -231,9 +233,12 @@ def photometry(mapobj, centre, a_ellipse, b_ellipse, theta, annulus_width):
         annulus_data_1d = annulus_data[mask.data > 0]
         _, median_sigclip, _ = sigma_clipped_stats(annulus_data_1d)
         bkg_median.append(median_sigclip)
-        bkg_std.append(np.nanstd(annulus_data_1d))
+        # bkg_std.append(np.nanstd(annulus_data_1d))
     bkg_median = np.array(bkg_median)
-    bkg_std = np.array(bkg_std)
+    for t_mask in temp_mask:
+        cov_mat1 = t_mask.multiply(cov_data)[t_mask.data>0]
+        bkg_std.append(np.sqrt(np.nansum(cov_mat1)))
+    bkg_std = np.array(bkg_std) 
     phot_table = aperture_photometry(pri_data, aperture)
     phot_table['annulus_median'] = bkg_median
     phot_table['aper_bkg'] = bkg_median * aperture.area

@@ -17,7 +17,7 @@ def Source(name, mapobjList, centre, size, theta, width):
 
 
 
-path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week9/maps/feed3_old"
+path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps"
 
 filenames_un = sy_class.get_filename_full(path, 'fits')
 onlynames = sy_class.get_filename_full(path, 'fits',1)
@@ -26,8 +26,7 @@ mapnames = [sy_class.get_name_fromPath(fname) for fname in filenames]
 mapobjs = []
 for onefile in filenames:
     mapobjs.append(sy_class.AstroMap(onefile))
-
-
+print(sy_class.jackknife(mapobjs[0],[240,240],40))
 centre = np.array([9.6076856,41.6096426])
 size = np.array([6,6])
 theta = 0
@@ -38,5 +37,6 @@ print(stats_tools.s_index(obj))
 print(stats_tools.chi_sqare(obj))
 sy_class.sp_plot(obj)
 sy_class.fitting_plot(obj)
-plt.legend()
+plt.title('5C3.50')
+# plt.legend()
 plt.show()
