@@ -13,6 +13,7 @@ from photutils import EllipticalAperture
 from photutils import EllipticalAnnulus
 from astropy.stats import sigma_clipped_stats
 from math import e
+import math
 
 def iband2fre(Num):  # bandwidth, in units of GHz
     numbers = {
@@ -88,23 +89,26 @@ def show_aper(ax,centre,rad): # ax is the axes of the current figure
     ellipse = Ellipse(xy=(centre[0],centre[1]), width = 2*rad, height = 2*rad, angle=0, edgecolor='b', fc='None', lw=2)
     ax.add_patch(ellipse)
 
-
 class AstroMap(object):
     def __init__(self, name): # name is the path + name of the map
         self.name = name
-    def showheader(self,num=None,hduname=None):
+    def showheader(self,hduname=None):
         raw_fits=fits.open(self.name)
-        if isinstance(hduname,str):
-            print(repr(raw_fits[hduname].header))
-        elif isinstance(num, int):
-            print(repr(raw_fits[num].header))            
+        if hduname is not None:
+            try:
+                print(repr(raw_fits[hduname].header))
+            except:
+                print('wrong hduname input')
+                raw_fits.info()
         else:
-            raw_fits.info() 
-    def getHDU(self, hduname):
-            hdu=fits.open(self.name)[hduname]
-            w_p=WCS(hdu.header)
-            mat_p=hdu.data
-            return mat_p, w_p
+            raw_fits.info()                   
+    def getHDU(self, hduname = None):
+        if  hduname is None:
+            hduname = 0
+        hdu=fits.open(self.name)[hduname]
+        w_p=WCS(hdu.header)
+        mat_p=hdu.data
+        return mat_p, w_p
     def getPara(self, parametername):
         tempStr = get_name_fromPath(self.name)
         spliter = '_'
@@ -121,34 +125,35 @@ class AstroMap(object):
             return subStrs[-1]
         else:
             print('check the parameter name!')
+    def showmap(self,hduname=None, fig = None, subPlot = None):
+        mat_data, wcs_data = self.getHDU(hduname)
+        plt.style.use('science')
+        if subPlot is not None and fig is not None:
+            ax = fig.add_subplot(subPlot[0],subPlot[1],subPlot[2], projection = wcs_data)
+        else:
+            ax = plt.subplot(projection=wcs_data)
+        ax.imshow(mat_data, origin='lower', vmin=np.nanmedian(mat_data)-np.nanstd(mat_data)/20, 
+                                             vmax=np.nanmedian(mat_data)+np.nanstd(mat_data)/20,
+                                             cmap='jet')
+        ax.coords['ra'].set_axislabel('Right Ascension')
+        ax.coords['dec'].set_axislabel('Declination')
+        ax.set_title(str(self.getPara('freq')[0])+'-'+str(self.getPara('freq')[1])+' GHz')
+        ##### in the future, add Gaussian filter and contour plot
+        # some initial codes:
+        # lim=np.arange(-10*step+ med, 10*step + med, step/2)
+        # mat = gaussian_filter(mat, sizeinput)
+        # h = ax.contour(mat,lim,origin='lower', cmap='jet')
 
-def plot_map(mapobj, HDUname, sizeinput=None):
+
+def plot_map(mapobjList, HDUname):
     fig=plt.figure()
     plt.style.use('science')
-    mat, w = mapobj.getHDU(HDUname)
-    med = np.nanmedian(mat)
-    step= 2e-3
-    ax = fig.add_subplot(111,projection=w)
-    # temp=str(mapobj.getHDU(4)['iband']['value'][0])+'-'+str(mapobj.getHDU(4)['iband']['value'][1])+' '+mapobj.getHDU(4)['iband']['unit']
-    # feed = int(mapobj.getHDU('Para')['feeds']['value'])
-    # cutoff = float(mapobj.getHDU('Para')['cutoff']['value'])
-    if isinstance(sizeinput,int) :
-        ## gaussian filter
-        lim=np.arange(-10*step+ med, 10*step + med, step/2)
-        mat = gaussian_filter(mat, sizeinput)
-        h = ax.contour(mat,lim,origin='lower', cmap='jet')
-        # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp + f'\nGaussian filter size = {sizeinput} pixel')
-    else:
-        ### no filter
-        h = ax.imshow(mat,vmin=-1e-2,vmax=1e-3,origin='lower', cmap='jet')
-        # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
-
-    plt.xlabel('RA')
-    plt.ylabel('DEC')
-    cb=plt.colorbar(h)
-    cb.set_label('T/K')
-    plt.show()
-
+    Num = len(mapobjList)
+    x_num = math.floor(np.sqrt(Num))
+    y_num = math.ceil(Num/x_num)
+    for No, obj in enumerate(mapobjList):
+        subPlot = [int(x_num), int(y_num), int(No+1)] # the location of the subplot
+        obj.showmap(HDUname, fig, subPlot)
 
 def plot_diffmap(mapobj1, mapobj2, centre, radius):
     fig=plt.figure()
@@ -275,7 +280,6 @@ def T_Tplot(mapobj1, mapobj2):
     list1, list2 = stats_tools.pairFrom2mat(data1,data2)
     plt.figure()
     plt.plot(list1, list2,'.')
-    plt.show()
     
 if __name__ == '__main__':
     path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/EachFeedmaps/maps"
