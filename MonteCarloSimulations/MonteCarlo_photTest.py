@@ -44,7 +44,7 @@ from photutils.datasets import make_100gaussians_image
 pos_deg = [12.72811659,40.0719062]
 #   [14.09437465,40.96973421]
 #   [14.86719693,40.54710286]
-path = 'MonteCarloSimulations/fg4_Feeds0_Band0_test.fits'
+path = 'fg4_Feeds0_Band0_test.fits'
 mapobj = sy_class.AstroMap(path)
 mapobj.showheader()
 print(sy_class.photometry(mapobj,pos_deg,5,5,0,5)[-1])
