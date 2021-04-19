@@ -1,5 +1,6 @@
 from math import e
 import numpy as np
+import math
 
 # 定义计算离散点导数的函数
 def cal_deriv(x, y):                  # x, y的类型均为列表
@@ -87,8 +88,12 @@ def pairFrom2mat(mat1, mat2):
     if mat1.shape == mat2.shape:
         for i in np.arange(0,mat1.shape[0],1,int):
             for j in np.arange(0,mat1.shape[1],1,int):
-                number1.append(mat1[i,j])
-                number2.append(mat2[i,j])
+                if  not math.isnan(mat1[i,j]) and not math.isnan(mat2[i,j]):
+                    number1.append(mat1[i,j])
+                    number2.append(mat2[i,j])
+                else:
+                    continue
+               
         return np.array(number1), np.array(number2)
     else:
         # to be continue

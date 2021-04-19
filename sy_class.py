@@ -273,45 +273,23 @@ def fitting_plot(source):
     plt.plot(fre,np.power(fre,index[0])*np.power(e,temp[0]),'b--',linewidth=2,label='Fitting')
 
 def T_Tplot(mapobj1, mapobj2):
-    data1, wcs1 = mapobj1.getHDU('primary')
-    data2, wcs2 = mapobj2.getHDU('primary')
-    data1 = cut_aper(data1, [240,240],40)
-    data2 = cut_aper(data2, [240,240],40)
+    data1, _ = mapobj1.getHDU('primary')
+    data2, _ = mapobj2.getHDU('primary')
+    # data1 = cut_aper(data1, [240,240],40)
+    # data2 = cut_aper(data2, [240,240],40)
     list1, list2 = stats_tools.pairFrom2mat(data1,data2)
+    
     plt.figure()
     plt.plot(list1, list2,'.')
     
 if __name__ == '__main__':
-    path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/EachFeedmaps/maps"
-
-    filenames_un = get_filename_full(path, 'fits')
-    onlynames = get_filename_full(path, 'fits',1)
-    filenames = sortbyFeed(onlynames, filenames_un)
-    mapnames = [get_name_fromPath(fname) for fname in filenames]
-    mapobjs = []
-    feeds = []
-    mean = []
-    std_p = []
-    std_c = [] 
-    for onefile in filenames:
-        mapobjs.append(AstroMap(onefile))
-    # T_Tplot(mapobjs[0],mapobjs[5])
-    for onemap in mapobjs:
-        feeds.append(onemap.getPara('feed'))
-        mean.append((jackknife(onemap, [240,240], 40)[0]+
-                    jackknife(onemap,[180,280],40)[0]+
-                    jackknife(onemap,[180,200],40)[0]+
-                    jackknife(onemap,[300,280],40)[0]+
-                    jackknife(onemap,[300,200],40)[0])/5)
-        # std_c.append(jackknife(onemap,[240,240], 40)[1])
-        std_p.append((jackknife(onemap, [240,240], 40)[2]+
-                        jackknife(onemap,[180,280],40)[2]+
-                        jackknife(onemap,[180,200],40)[2]+
-                        jackknife(onemap,[300,280],40)[2]+
-                        jackknife(onemap,[300,200],40)[2])/5)
-    # feeds = np.array(feeds)
-    for std in mean:
-        print(std)
+    mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
+    mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
+    # mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
+    
+    # print(type(d[0,0]))
+    T_Tplot(mapobj1, mapobj2)
+    plt.show()
 
 
     
