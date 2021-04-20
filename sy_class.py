@@ -170,7 +170,9 @@ class AstroMap(object):
         vmax = np.nanmedian(mat_data)+np.nanstd(mat_data)/20
         ax2 = fig.add_subplot(122, projection = wcs_cut)
         ax2.imshow(mat_cut,origin='lower',vmin=vmin, vmax = vmax, cmap='jet')
-        
+        # contour has to be sliced as well
+        # ax2.contour(np.arange(datacut.shape[0]), np.arange(datacut.shape[1]), datacut, 
+        #     colors=colors, levels=levels, linewidths=0.5, smooth=16)
         ax2.coords['ra'].set_axislabel('Right Ascension')
         ax2.coords['dec'].set_axislabel('Declination')
 
@@ -320,16 +322,11 @@ if __name__ == '__main__':
     mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
     # mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band3.fits')
     
-    # print(type(d[0,0]))
-    mapobj1.showmap(0)
-    mapobj2.showmap()
-    # plt.show()
-    
     centre = np.array([10.6836, 41.2790])
     size = np.array([60,20])
     theta = 127 
-    # T_Tplot(mapobj1, mapobj2, centre, size, theta)
-    mapobj1.showaper(centre,size, 127)
+    T_Tplot(mapobj1, mapobj2, centre, size, theta)
+    mapobj2.showaper(centre, size, 127)
     plt.show()
 
 
