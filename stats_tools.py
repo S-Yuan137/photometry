@@ -1,6 +1,7 @@
 from math import e
 import numpy as np
 import math
+from photutils import EllipticalAperture
 
 # 定义计算离散点导数的函数
 def cal_deriv(x, y):                  # x, y的类型均为列表
@@ -79,27 +80,30 @@ def ordinary_least_squares_err(X,Y,Y_err):
     beta0_rms=np.sqrt(np.power(Y_mean_rms,2)+np.power(beta1_rms,2))
     return beta1_rms, beta0_rms
 
-def pairFrom2mat(mat1, mat2):
+def pairFrom2mat(mat1, mat2, centre, size, theta_deg):
     '''
     generate the pairs of numbers at the same position in two matrices 
     '''
-    number1 = []
-    number2 = []
+    a_ellipse, b_ellipse = (size[0], size[1])
+    centre_pix = [(centre[0], centre[1])]
+    theta = theta_deg * (np.pi/180)
+    aperture = EllipticalAperture(centre_pix, a_ellipse, b_ellipse, theta)
+    aperture_mask = aperture.to_mask(method= 'center')[0]
     if mat1.shape == mat2.shape:
-        for i in np.arange(0,mat1.shape[0],1,int):
-            for j in np.arange(0,mat1.shape[1],1,int):
-                if  not math.isnan(mat1[i,j]) and not math.isnan(mat2[i,j]):
-                    number1.append(mat1[i,j])
-                    number2.append(mat2[i,j])
-                else:
-                    continue
-               
-        return np.array(number1), np.array(number2)
+        # mask = np.isfinite(mat1) & np.isfinite(mat2)
+        # xpix, ypix = np.meshgrid(np.arange(mat1.shape[0]),np.arange(mat1.shape[1]))
+        # rpix = np.sqrt((xpix-x0)**2 + (ypix-y0)**2)
+        mat1 = aperture_mask.multiply(mat1)
+        mat2 = aperture_mask.multiply(mat2)
+        mask = ( aperture_mask.data >0 ) & np.isfinite(mat1) & np.isfinite(mat2)
+        return mat1[mask], mat2[mask]
     else:
         # to be continue
-        return 'to be continue'
+        return 'must be in same shape'
 
 if __name__ == '__main__':
     # temp test
-    mat1 = np.array([[1,2,3],[4,9,6]])
-    print(pairFrom2mat(mat1, mat1))
+    mat = np.array([[1,2,3],
+                    [4,5,6]])
+    print(mat)
+    print(mat.shape)   

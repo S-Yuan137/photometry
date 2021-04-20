@@ -85,8 +85,8 @@ def cut_aper(matrix,centre,rad):
                 continue
     return Cut
 
-def show_aper(ax,centre,rad): # ax is the axes of the current figure
-    ellipse = Ellipse(xy=(centre[0],centre[1]), width = 2*rad, height = 2*rad, angle=0, edgecolor='b', fc='None', lw=2)
+def show_aper(ax,centre,size, theta_deg): # ax is the axes of the current figure
+    ellipse = Ellipse(xy=(centre[0],centre[1]), width = 2*size[0], height = 2*size[1], angle=theta_deg, edgecolor='b', fc='None', lw=2)
     ax.add_patch(ellipse)
 
 class AstroMap(object):
@@ -137,12 +137,42 @@ class AstroMap(object):
                                              cmap='jet')
         ax.coords['ra'].set_axislabel('Right Ascension')
         ax.coords['dec'].set_axislabel('Declination')
-        ax.set_title(str(self.getPara('freq')[0])+'-'+str(self.getPara('freq')[1])+' GHz')
+        try:
+            ax.set_title(str(self.getPara('freq')[0])+'-'+str(self.getPara('freq')[1])+' GHz')
+        except:
+            print('Fail to get freqency!')
+        return ax
         ##### in the future, add Gaussian filter and contour plot
         # some initial codes:
         # lim=np.arange(-10*step+ med, 10*step + med, step/2)
         # mat = gaussian_filter(mat, sizeinput)
         # h = ax.contour(mat,lim,origin='lower', cmap='jet')
+    def showaper(self, centre_world, size, theta_deg = None, hduname = None):
+        ##### show the whole map and sliced map ( based on input aperture)
+        mat_data, wcs_data = self.getHDU(hduname)
+        x0, y0 = wcs_data.wcs_world2pix(centre_world[0], centre_world[1], 0)
+        fig = plt.figure()
+        ax = self.showmap(hduname, fig, [1,2,1])
+        show_aper(ax, [x0, y0], size, theta_deg)
+        ###### the second sliced map #######
+        theta = theta_deg * (np.pi/180)
+        aperture = EllipticalAperture([(x0,y0)], size[0], size[1], theta)
+        aperture_mask = aperture.to_mask(method= 'center')[0]
+        aper_mat = aperture_mask.multiply(mat_data)
+        y_Npix, x_Npix = aper_mat.shape
+        x1 = round(x0-x_Npix/2)
+        x2 = round(x0+x_Npix/2)
+        y1 = round(y0-y_Npix/2)
+        y2 = round(y0+y_Npix/2)
+        wcs_cut = wcs_data[y1:y2, x1:x2]
+        mat_cut = mat_data[y1:y2, x1:x2]
+        vmin = np.nanmedian(mat_data)-np.nanstd(mat_data)/20
+        vmax = np.nanmedian(mat_data)+np.nanstd(mat_data)/20
+        ax2 = fig.add_subplot(122, projection = wcs_cut)
+        ax2.imshow(mat_cut,origin='lower',vmin=vmin, vmax = vmax, cmap='jet')
+        
+        ax2.coords['ra'].set_axislabel('Right Ascension')
+        ax2.coords['dec'].set_axislabel('Declination')
 
 
 def plot_map(mapobjList, HDUname):
@@ -171,7 +201,6 @@ def plot_diffmap(mapobj1, mapobj2, centre, radius):
     plt.ylabel('DEC')
     cb=plt.colorbar(h)
     cb.set_label('T/K')
-    show_aper(ax,centre,radius)
 
 def jackknife(mapobj1, centre, rad, mapobj2=None):
     pri_mat1  = cut_aper(mapobj1.getHDU('primary')[0], centre, rad)
@@ -201,7 +230,7 @@ def T2flux(Temperture, freq):
     factor = 2.59971*10**-3
     return factor*freq**2*Temperture
 
-def photometry(mapobj, centre, a_ellipse, b_ellipse, theta, annulus_width):
+def photometry(mapobj, centre, a_ellipse, b_ellipse, theta_deg, annulus_width):
     '''
     photometry function：
     centre:
@@ -218,6 +247,7 @@ def photometry(mapobj, centre, a_ellipse, b_ellipse, theta, annulus_width):
     The rotation angle increases counterclockwise. The default is 0.
     '''
     distance_annu_aper = 5  # the distance between the aperture and the annulus in units of pixels
+    theta = theta_deg * (np.pi/180)
     pri_data, wcs_data = mapobj.getHDU('primary')
     cov_data,_ = mapobj.getHDU('covariance')
     
@@ -272,23 +302,34 @@ def fitting_plot(source):
     fre=np.linspace(26,34,20)
     plt.plot(fre,np.power(fre,index[0])*np.power(e,temp[0]),'b--',linewidth=2,label='Fitting')
 
-def T_Tplot(mapobj1, mapobj2):
-    data1, _ = mapobj1.getHDU('primary')
+def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg):
+    data1, wcs_data = mapobj1.getHDU('primary')
     data2, _ = mapobj2.getHDU('primary')
-    # data1 = cut_aper(data1, [240,240],40)
-    # data2 = cut_aper(data2, [240,240],40)
-    list1, list2 = stats_tools.pairFrom2mat(data1,data2)
+    x0, y0 = wcs_data.wcs_world2pix(centre_world[0], centre_world[1], 0)
+    list1, list2 = stats_tools.pairFrom2mat(data1,data2, [x0, y0], size, theta)
     
     plt.figure()
     plt.plot(list1, list2,'.')
+    print(len(list1))
+    plt.xlabel('Temperature values at 4.85 GHz')
+    plt.ylabel('Temperature values at 26.5 GHz')
+    plt.show()
     
 if __name__ == '__main__':
-    mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
-    mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
-    # mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
+    mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
+    mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
+    # mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band3.fits')
     
     # print(type(d[0,0]))
-    T_Tplot(mapobj1, mapobj2)
+    mapobj1.showmap(0)
+    mapobj2.showmap()
+    # plt.show()
+    
+    centre = np.array([10.6836, 41.2790])
+    size = np.array([60,20])
+    theta = 127 
+    # T_Tplot(mapobj1, mapobj2, centre, size, theta)
+    mapobj1.showaper(centre,size, 127)
     plt.show()
 
 
