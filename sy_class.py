@@ -132,8 +132,8 @@ class AstroMap(object):
             ax = fig.add_subplot(subPlot[0],subPlot[1],subPlot[2], projection = wcs_data)
         else:
             ax = plt.subplot(projection=wcs_data)
-        ax.imshow(mat_data, origin='lower', vmin=np.nanmedian(mat_data)-np.nanstd(mat_data)/20, 
-                                             vmax=np.nanmedian(mat_data)+np.nanstd(mat_data)/20,
+        ax.imshow(mat_data, origin='lower', vmin=np.nanmedian(mat_data)-np.nanstd(mat_data)/10, 
+                                             vmax=np.nanmedian(mat_data)+np.nanstd(mat_data)/10,
                                              cmap='jet')
         ax.coords['ra'].set_axislabel('Right Ascension')
         ax.coords['dec'].set_axislabel('Declination')
@@ -166,13 +166,17 @@ class AstroMap(object):
         y2 = round(y0+y_Npix/2)
         wcs_cut = wcs_data[y1:y2, x1:x2]
         mat_cut = mat_data[y1:y2, x1:x2]
-        vmin = np.nanmedian(mat_data)-np.nanstd(mat_data)/20
-        vmax = np.nanmedian(mat_data)+np.nanstd(mat_data)/20
+        # these two are for future usage
+        # vmin = np.nanmedian(mat_data)-np.nanstd(mat_data)/10 
+        # vmax = np.nanmedian(mat_data)+np.nanstd(mat_data)/10
         ax2 = fig.add_subplot(122, projection = wcs_cut)
-        ax2.imshow(mat_cut,origin='lower',vmin=vmin, vmax = vmax, cmap='jet')
+        ax2.imshow(mat_cut,origin='lower', cmap='jet')
         # contour has to be sliced as well
-        # ax2.contour(np.arange(datacut.shape[0]), np.arange(datacut.shape[1]), datacut, 
-        #     colors=colors, levels=levels, linewidths=0.5, smooth=16)
+        # colors = 
+        levels = np.linspace(np.nanmin(mat_cut), np.nanmax(mat_cut), 5)
+        print(f'contour levels in the aperSubplot:{levels}') # show the contour levels
+        ax2.contour(np.arange(mat_cut.shape[1]), np.arange(mat_cut.shape[0]), mat_cut, colors= 'k', levels=levels,
+                    linewidths=1, smooth=16)
         ax2.coords['ra'].set_axislabel('Right Ascension')
         ax2.coords['dec'].set_axislabel('Declination')
 
@@ -304,15 +308,19 @@ def fitting_plot(source):
     fre=np.linspace(26,34,20)
     plt.plot(fre,np.power(fre,index[0])*np.power(e,temp[0]),'b--',linewidth=2,label='Fitting')
 
-def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg):
+def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg, downsample = [False, None, None]):
+    '''
+    the downsample parameter should match the size of the aperture, generally 1/10 of the size
+    '''
     data1, wcs_data = mapobj1.getHDU('primary')
     data2, _ = mapobj2.getHDU('primary')
     x0, y0 = wcs_data.wcs_world2pix(centre_world[0], centre_world[1], 0)
-    list1, list2 = stats_tools.pairFrom2mat(data1,data2, [x0, y0], size, theta)
+    list1, list2 = stats_tools.pairFrom2mat(data1,data2, [x0, y0], size, theta_deg, downsample)
     
     plt.figure()
-    plt.plot(list1, list2,'.')
+    plt.plot(list1, list2,'*')
     print(len(list1))
+    print(len(list2))
     plt.xlabel('Temperature values at 4.85 GHz')
     plt.ylabel('Temperature values at 26.5 GHz')
     plt.show()
@@ -320,13 +328,15 @@ def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg):
 if __name__ == '__main__':
     mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
     mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
-    # mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band3.fits')
-    
-    centre = np.array([10.6836, 41.2790])
-    size = np.array([60,20])
-    theta = 127 
-    T_Tplot(mapobj1, mapobj2, centre, size, theta)
-    mapobj2.showaper(centre, size, 127)
+    # mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band7.fits')
+    M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
+    RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}
+
+    T_Tplot(mapobj1, mapobj2, M31['centre'], M31['size'], M31['theta'], [True, 4, 4])
+    # T_Tplot(mapobj1, mapobj2, RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'], [True, 2, 2])
+    # mapobj2.showaper(RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
+    # mapobj2.showaper(M31['centre'], M31['size'], M31['theta'])
+
     plt.show()
 
 

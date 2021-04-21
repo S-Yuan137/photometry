@@ -2,6 +2,7 @@ from math import e
 import numpy as np
 import math
 from photutils import EllipticalAperture
+from skimage.measure import block_reduce # for downsample ndarray
 
 # 定义计算离散点导数的函数
 def cal_deriv(x, y):                  # x, y的类型均为列表
@@ -80,9 +81,15 @@ def ordinary_least_squares_err(X,Y,Y_err):
     beta0_rms=np.sqrt(np.power(Y_mean_rms,2)+np.power(beta1_rms,2))
     return beta1_rms, beta0_rms
 
-def pairFrom2mat(mat1, mat2, centre, size, theta_deg):
+def pairFrom2mat(mat1, mat2, centre, size, theta_deg, downsample):
     '''
     generate the pairs of numbers at the same position in two matrices 
+
+    downsample is a list : [True, Npix_x_mean, Npixx_y_mean]
+
+    downsample[1] is the downsample integer along the x axis
+
+    similarly, so as the downsample[2]
     '''
     a_ellipse, b_ellipse = (size[0], size[1])
     centre_pix = [(centre[0], centre[1])]
@@ -90,13 +97,18 @@ def pairFrom2mat(mat1, mat2, centre, size, theta_deg):
     aperture = EllipticalAperture(centre_pix, a_ellipse, b_ellipse, theta)
     aperture_mask = aperture.to_mask(method= 'center')[0]
     if mat1.shape == mat2.shape:
-        # mask = np.isfinite(mat1) & np.isfinite(mat2)
-        # xpix, ypix = np.meshgrid(np.arange(mat1.shape[0]),np.arange(mat1.shape[1]))
-        # rpix = np.sqrt((xpix-x0)**2 + (ypix-y0)**2)
         mat1 = aperture_mask.multiply(mat1)
         mat2 = aperture_mask.multiply(mat2)
         mask = ( aperture_mask.data >0 ) & np.isfinite(mat1) & np.isfinite(mat2)
-        return mat1[mask], mat2[mask]
+        if downsample[0]:
+            mat1_downsample = block_reduce(mat1, block_size = (downsample[2], downsample[1]), func=np.nanmean)
+            mat2_downsample = block_reduce(mat2, block_size = (downsample[2], downsample[1]), func=np.nanmean)
+            mask_downsample = block_reduce(mask, block_size = (downsample[2], downsample[1]), func=np.nanmin) 
+            return mat1_downsample[mask_downsample], mat2_downsample[mask_downsample]
+
+        else:
+            # mask = ( aperture_mask.data >0 ) & np.isfinite(mat1) & np.isfinite(mat2)
+            return mat1[mask], mat2[mask]
     else:
         # to be continue
         return 'must be in same shape'
