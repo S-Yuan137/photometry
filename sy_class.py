@@ -123,6 +123,8 @@ class AstroMap(object):
             return iband2fre(subStrs[2][4:])
         elif parametername == 'attr' or parametername == 'Attr':
             return subStrs[-1]
+        elif parametername == 'name':
+            return self.name
         else:
             print('check the parameter name!')
     def showmap(self,hduname=None, fig = None, subPlot = None):
@@ -138,7 +140,7 @@ class AstroMap(object):
         ax.coords['ra'].set_axislabel('Right Ascension')
         ax.coords['dec'].set_axislabel('Declination')
         try:
-            ax.set_title(str(self.getPara('freq')[0])+'-'+str(self.getPara('freq')[1])+' GHz')
+            ax.set_title(str(self.getPara('freq')[0])+'-'+str(self.getPara('freq')[1])+' GHz'+ ' '+ self.getPara('attr'))
         except:
             print('Fail to get freqency!')
         return ax
@@ -313,16 +315,17 @@ def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg, downsample = [False
     the downsample parameter should match the size of the aperture, generally 1/10 of the size
     '''
     data1, wcs_data = mapobj1.getHDU('primary')
-    data2, _ = mapobj2.getHDU('primary')
     x0, y0 = wcs_data.wcs_world2pix(centre_world[0], centre_world[1], 0)
-    list1, list2 = stats_tools.pairFrom2mat(data1,data2, [x0, y0], size, theta_deg, downsample)
-    
     plt.figure()
-    plt.plot(list1, list2,'*')
-    print(len(list1))
-    print(len(list2))
+    for map2 in mapobj2:
+        data2, _ = map2.getHDU('primary')
+        list1, list2 = stats_tools.pairFrom2mat(data1,data2, [x0, y0], size, theta_deg, downsample)
+        plt.plot(list1, list2,'.', label = map2.getPara('attr'))
+        print(len(list1))
+
     plt.xlabel('Temperature values at 4.85 GHz')
     plt.ylabel('Temperature values at 26.5 GHz')
+    plt.legend()
     plt.show()
     
 if __name__ == '__main__':
@@ -331,8 +334,9 @@ if __name__ == '__main__':
     # mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band7.fits')
     M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
     RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}
-
-    T_Tplot(mapobj1, mapobj2, M31['centre'], M31['size'], M31['theta'], [True, 4, 4])
+    print(jackknife(mapobj2, [240,240], 40))
+    mapobj2.showaper(M31['centre'], M31['size'],M31['theta'])
+    T_Tplot(mapobj1, [mapobj2], M31['centre'], M31['size'], M31['theta'], [True, 1, 1])
     # T_Tplot(mapobj1, mapobj2, RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'], [True, 2, 2])
     # mapobj2.showaper(RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
     # mapobj2.showaper(M31['centre'], M31['size'], M31['theta'])

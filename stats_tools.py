@@ -87,9 +87,9 @@ def pairFrom2mat(mat1, mat2, centre, size, theta_deg, downsample):
 
     downsample is a list : [True, Npix_x_mean, Npixx_y_mean]
 
-    downsample[1] is the downsample integer along the x axis
+    downsample[1] is the downsample integer along the x axis.  similarly, so as the downsample[2]
 
-    similarly, so as the downsample[2]
+    
     '''
     a_ellipse, b_ellipse = (size[0], size[1])
     centre_pix = [(centre[0], centre[1])]
