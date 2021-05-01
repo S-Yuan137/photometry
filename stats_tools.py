@@ -81,6 +81,20 @@ def ordinary_least_squares_err(X,Y,Y_err):
     beta0_rms=np.sqrt(np.power(Y_mean_rms,2)+np.power(beta1_rms,2))
     return beta1_rms, beta0_rms
 
+def maskCut(mat, centre, size, theta_deg, downsample):
+    a_ellipse, b_ellipse = (size[0], size[1])
+    centre_pix = [(centre[0], centre[1])]
+    theta = theta_deg * (np.pi/180)
+    aperture = EllipticalAperture(centre_pix, a_ellipse, b_ellipse, theta)
+    aperture_mask = aperture.to_mask(method= 'center')[0]
+    newMat = aperture_mask.multiply(mat)
+    if downsample[0] is not None:
+        mat1_downsample = block_reduce(newMat, block_size = (downsample[1], downsample[0]), func=np.nanmean)
+        return mat1_downsample
+    else:
+        return newMat
+
+
 def pairFrom2mat(mat1, mat2, centre, size, theta_deg, downsample):
     '''
     generate the pairs of numbers at the same position in two matrices 
@@ -100,10 +114,10 @@ def pairFrom2mat(mat1, mat2, centre, size, theta_deg, downsample):
         mat1 = aperture_mask.multiply(mat1)
         mat2 = aperture_mask.multiply(mat2)
         mask = ( aperture_mask.data >0 ) & np.isfinite(mat1) & np.isfinite(mat2)
-        if downsample[0]:
-            mat1_downsample = block_reduce(mat1, block_size = (downsample[2], downsample[1]), func=np.nanmean)
-            mat2_downsample = block_reduce(mat2, block_size = (downsample[2], downsample[1]), func=np.nanmean)
-            mask_downsample = block_reduce(mask, block_size = (downsample[2], downsample[1]), func=np.nanmin) 
+        if downsample[0] is not None:
+            mat1_downsample = block_reduce(mat1, block_size = (downsample[1], downsample[0]), func=np.nanmean)
+            mat2_downsample = block_reduce(mat2, block_size = (downsample[1], downsample[0]), func=np.nanmean)
+            mask_downsample = block_reduce(mask, block_size = (downsample[1], downsample[0]), func=np.nanmin) 
             return mat1_downsample[mask_downsample], mat2_downsample[mask_downsample]
 
         else:
@@ -117,5 +131,6 @@ if __name__ == '__main__':
     # temp test
     mat = np.array([[1,2,3],
                     [4,5,6]])
+    mat = [1,2]
     print(mat)
-    print(mat.shape)   
+    print(len(mat))   

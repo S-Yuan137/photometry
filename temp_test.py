@@ -47,29 +47,33 @@ plt.show()
 
 ############### sigma_f^2 percentage cut off #####################
 
-M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
-path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week11/maps_sig_f_cut/feed11_band0"
-# path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/EachFeedmaps/maps"
-refmap = sy_class.AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
-filenames_un = sy_class.get_filename_full(path, 'fits')
-onlynames = sy_class.get_filename_full(path, 'fits',1)
-filenames = sy_class.sortbyIband(onlynames, filenames_un)
-# mapnames = [sy_class.get_name_fromPath(fname) for fname in filenames]
-mapobjs = []
-for onefile in filenames:
-    mapobjs.append(sy_class.AstroMap(onefile))
+# M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
+# path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week12/maps_sig_cuts/feed11_band0"
+# # path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/EachFeedmaps/maps"
+# refmap = sy_class.AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
+# filenames_un = sy_class.get_filename_full(path, 'fits')
+# onlynames = sy_class.get_filename_full(path, 'fits',1)
+# filenames = sy_class.sortbyIband(onlynames, filenames_un)
+# # mapnames = [sy_class.get_name_fromPath(fname) for fname in filenames]
+# mapobjs = []
+# for onefile in filenames:
+#     mapobjs.append(sy_class.AstroMap(onefile))
 
-# rms = []
+# rms_conv = []
+# rms_pix = []
 # for onemap in mapobjs:
-#     _,conv,_ = sy_class.jackknife(onemap,[240,240],40)
+#     _,conv, pixel = sy_class.jackknife(onemap,[180,200],40)
 #     print(onemap.getPara('name'))
-#     print(sy_class.jackknife(onemap,[240,240],40))
-#     rms.append(round(conv,4))
+#     print(sy_class.jackknife(onemap,[180,200],40))
+#     _, wcs = onemap.getHDU('primary')
+#     rms_conv.append(round(conv,4))
+#     rms_pix.append(round(pixel,4))
 
-# print(rms)
-sy_class.plot_map(mapobjs, 'primary')
-sy_class.T_Tplot(mapobjs[0], mapobjs, M31['centre'], M31['size'], M31['theta'], [True, 4, 4])
-plt.show()
+# print(rms_conv)
+# print(rms_pix)
+# sy_class.plot_map(mapobjs, 'primary')
+# sy_class.T_Tplot(mapobjs[0], mapobjs, M31['centre'], M31['size'], M31['theta'], [True, 4, 4])
+# plt.show()
 
 
 ##################### Convergence test ############################
@@ -94,3 +98,9 @@ plt.show()
 # sy_class.plot_map(mapobjs, 'primary')
 # sy_class.T_Tplot(refmap, mapobjs, M31['centre'], M31['size'], M31['theta'], [True, 4, 4])
 # plt.show()
+
+
+
+###########################  ##############################
+M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
+RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}

@@ -14,6 +14,7 @@ from photutils import EllipticalAnnulus
 from astropy.stats import sigma_clipped_stats
 from math import e
 import math
+import re
 
 def iband2fre(Num):  # bandwidth, in units of GHz
     numbers = {
@@ -28,27 +29,20 @@ def iband2fre(Num):  # bandwidth, in units of GHz
     }
     return numbers.get(int(Num), np.nan)
 
-# avoid using np.argsort since the input arguments are lists, even if different length
+
 def sort_list(list1,list2): #according to list1 to sort two lists
-    zipped=zip(list1,list2)
-    sort_zipped = sorted(zipped,key=lambda x:(x[0]))
-    result = zip(*sort_zipped) # 将 sort_zipped 拆分成两个元组
-    # list1_s, list2_s= [list(x) for x in result]
-    list2_s= [list(x) for x in result][1]
-    return list2_s
+    try:      # try convert the list1 elements to numbers
+        list1 = [float(num) for num in list1]
+        sortIndex = np.argsort(list1)
+        return [list2[i] for i in sortIndex]
+    except:   # avoid using np.argsort if the input arguments are lists(not numbers), even if different length
+        zipped=zip(list1,list2)
+        sort_zipped = sorted(zipped,key=lambda x:(x[0]))
+        result = zip(*sort_zipped) # 将 sort_zipped 拆分成两个元组
+        # list1_s, list2_s= [list(x) for x in result]
+        list2_s= [list(x) for x in result][1]
+        return list2_s
 
-def sortbyIband(names, filenames): # defalut format is the last character of names is the iband number
-    iband = [iname[-1] for iname in names]
-    fre_start = [iband2fre(i)[0] for i in iband]
-    return sort_list(fre_start, filenames)
-
-def sortbyFeed(names, filenames):
-    spliter = '_'
-    feeds = []
-    for onename in names:
-        subStrs = onename.split(spliter,2)
-        feeds.append([int(i) for i in subStrs[1][5:].split('-')])
-    return sort_list(feeds, filenames)
     
 def get_filename_full(path,filetype, onlyname=None):
     name =[]
@@ -72,7 +66,7 @@ def get_name_fromPath(mapname):
     except(ValueError):
         splitstr1 = '\\' # this is for paths of windows system 
         index1 = mapname.rindex(splitstr1)+1   
-    index2 = mapname.index(splitstr2)
+    index2 = mapname.rfind(splitstr2)
     return mapname[index1:index2]
 
 def cut_aper(matrix,centre,rad):
@@ -123,8 +117,10 @@ class AstroMap(object):
             return iband2fre(subStrs[2][4:])
         elif parametername == 'attr' or parametername == 'Attr':
             return subStrs[-1]
+        elif parametername == 'attrVal' or parametername == 'AttrVal':
+            return re.findall(r"\-?\d+\.?\d*",subStrs[-1])[0]
         elif parametername == 'name':
-            return self.name
+            return tempStr
         else:
             print('check the parameter name!')
     def showmap(self,hduname=None, fig = None, subPlot = None):
@@ -182,6 +178,21 @@ class AstroMap(object):
         ax2.coords['ra'].set_axislabel('Right Ascension')
         ax2.coords['dec'].set_axislabel('Declination')
 
+def sortMaps(mapobjList, sortIndicator):
+    indicators = []
+    for mapobj in mapobjList:
+        indicators.append(mapobj.getPara(sortIndicator))
+    return sort_list(indicators, mapobjList)
+
+def getMapList(mapFolder, sortIndicator = None):
+    mapdirs = get_filename_full(path, 'fits')
+    mapobjs = []
+    for onefile in mapdirs:
+        mapobjs.append(AstroMap(onefile))
+    if sortIndicator is not None:
+        return sortMaps(mapobjs, sortIndicator)
+    else:
+        return mapobjs
 
 def plot_map(mapobjList, HDUname):
     fig=plt.figure()
@@ -204,6 +215,7 @@ def plot_diffmap(mapobj1, mapobj2, centre, radius):
     ax = fig.add_subplot(111,projection=w)
     ### no filter
     h = ax.imshow(mat,vmin=-10*step+ med,vmax=5*step + med,origin='lower', cmap='jet')
+    # h = ax.imshow(mat,origin='lower', cmap='jet')
     # plt.title(f'feed = {feed}, cutoff = {cutoff}K' +', '+ temp)
     plt.xlabel('RA')
     plt.ylabel('DEC')
@@ -310,7 +322,7 @@ def fitting_plot(source):
     fre=np.linspace(26,34,20)
     plt.plot(fre,np.power(fre,index[0])*np.power(e,temp[0]),'b--',linewidth=2,label='Fitting')
 
-def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg, downsample = [False, None, None]):
+def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg, downsample = [None, None]):
     '''
     the downsample parameter should match the size of the aperture, generally 1/10 of the size
     '''
@@ -327,21 +339,41 @@ def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg, downsample = [False
     plt.ylabel('Temperature values at 26.5 GHz')
     plt.legend()
     plt.show()
-    
+
+def RMS(mapobjList, centre_world, size, theta_deg, downsample = [None, None]):
+    '''
+    estimate the background rms from two aspects: covariance and pixel values
+    '''
+
+
+def WeightAverageMap(mapobjList):
+    '''
+    use multiple maps to generate a weight averaged maps from each feed
+    '''
+   
 if __name__ == '__main__':
-    mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
-    mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
-    # mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band7.fits')
-    M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
-    RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}
-    print(jackknife(mapobj2, [240,240], 40))
-    mapobj2.showaper(M31['centre'], M31['size'],M31['theta'])
-    T_Tplot(mapobj1, [mapobj2], M31['centre'], M31['size'], M31['theta'], [True, 1, 1])
-    # T_Tplot(mapobj1, mapobj2, RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'], [True, 2, 2])
-    # mapobj2.showaper(RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
-    # mapobj2.showaper(M31['centre'], M31['size'], M31['theta'])
+    # mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
+    # # mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week12/maps_sig_cuts/feed11_band0/fg4_Feeds11_Band0_PC80.fits')
+    # mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band7.fits')
+    # M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
+    # RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}
+    # # print(jackknife(mapobj2, [240,240], 40))
+    # # mapobj2.showaper(M31['centre'], M31['size'],M31['theta'])
+    # T_Tplot(mapobj1, [mapobj2], M31['centre'], M31['size'], M31['theta'])
+    # # T_Tplot(mapobj1, [mapobj2], RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
+    # # mapobj2.showaper(RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
+    # # mapobj2.showaper(M31['centre'], M31['size'], M31['theta'])
 
-    plt.show()
-
+    # plt.show()
+    path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week12/maps_sig_cuts/feed1_band0"
+    # path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps"
+    refmap = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
+    maplist = getMapList(path, 'attrVal')
+    print(repr([one.getPara('name') for one in maplist]))
+    
+    # lis = ['100','20','40','60','80']
+    # print(type(lis[0]))
+    # sortIndex = np.argsort(lis)
+    # print([lis[i] for i in sortIndex])
 
     
