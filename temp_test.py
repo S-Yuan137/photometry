@@ -47,34 +47,17 @@ plt.show()
 
 ############### sigma_f^2 percentage cut off #####################
 
-# M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
-# path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week12/maps_sig_cuts/feed11_band0"
-# # path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/EachFeedmaps/maps"
-# refmap = sy_class.AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
-# filenames_un = sy_class.get_filename_full(path, 'fits')
-# onlynames = sy_class.get_filename_full(path, 'fits',1)
-# filenames = sy_class.sortbyIband(onlynames, filenames_un)
-# # mapnames = [sy_class.get_name_fromPath(fname) for fname in filenames]
-# mapobjs = []
-# for onefile in filenames:
-#     mapobjs.append(sy_class.AstroMap(onefile))
-
-# rms_conv = []
-# rms_pix = []
-# for onemap in mapobjs:
-#     _,conv, pixel = sy_class.jackknife(onemap,[180,200],40)
-#     print(onemap.getPara('name'))
-#     print(sy_class.jackknife(onemap,[180,200],40))
-#     _, wcs = onemap.getHDU('primary')
-#     rms_conv.append(round(conv,4))
-#     rms_pix.append(round(pixel,4))
-
-# print(rms_conv)
-# print(rms_pix)
-# sy_class.plot_map(mapobjs, 'primary')
-# sy_class.T_Tplot(mapobjs[0], mapobjs, M31['centre'], M31['size'], M31['theta'], [True, 4, 4])
-# plt.show()
-
+NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
+feed = [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]
+for i in feed:
+    path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref10/feed{i}_band0'
+    mapList = sy_class.getMapList(path, 'attrVal')
+    std_p, std_c = sy_class.NoiseStd(mapList, NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta'])
+    # print([mapone.getPara('name') for mapone in mapList])
+    # print(std_p)
+    pc = np.array([20,40,60,80,100])
+    print(stats_tools.findMinimaPoint(pc, std_p))
+    # print(','.join(map(str, std_p)))
 
 ##################### Convergence test ############################
 
@@ -102,5 +85,5 @@ plt.show()
 
 
 ###########################  ##############################
-M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
-RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}
+# M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
+# RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}

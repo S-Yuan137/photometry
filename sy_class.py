@@ -187,7 +187,7 @@ def sortMaps(mapobjList, sortIndicator):
     return sort_list(indicators, mapobjList)
 
 def getMapList(mapFolder, sortIndicator = None):
-    mapdirs = get_filename_full(path, 'fits')
+    mapdirs = get_filename_full(mapFolder, 'fits')
     mapobjs = []
     for onefile in mapdirs:
         mapobjs.append(AstroMap(onefile))

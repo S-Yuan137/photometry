@@ -3,6 +3,7 @@ import numpy as np
 import math
 from photutils import EllipticalAperture
 from skimage.measure import block_reduce # for downsample ndarray
+from scipy.optimize import curve_fit
 
 # 定义计算离散点导数的函数
 def cal_deriv(x, y):                  # x, y的类型均为列表
@@ -145,15 +146,21 @@ def pairFrom2mat(mat1, mat2, centre, size, theta_deg, downsample):
         # to be continue
         return 'must be in same shape'
 
+def func(x, a, b,c):
+    return a*x**2+b*x+c
+
+def findMinimaPoint(x,y):
+    popt, pcov = curve_fit(func, x, y)
+    return round(-popt[1]/(2*popt[0]),2)
+
 if __name__ == '__main__':
-    # temp test
-    mat = np.array([[1,2,3],
-                    [4,5,6],
-                    [7,8,9]])
-    mask = np.array([[1,1,1],
-                     [1,1,1],
-                     [1,1,1]])
-    # remask = np.isfinite(mask)
-    # print(mat* remask)
-    print(AddMatrices([mat, mat, mat], [mask, mask, mask]))
+    x = [20,30,40,50,60,70]
+    x = np.array(x)
+    num = [453,482,503,508,498,479]
+    y = np.array(num)
     
+    #非线性最小二乘法拟合
+    x = np.array([20,40,60,80,100])
+    y = np.array([0.006398525,0.005882647,0.005535435,0.006039832,0.008472968])
+    print(findMinimaPoint(x,y))
+        
