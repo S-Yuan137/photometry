@@ -343,37 +343,67 @@ def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg, downsample = [None,
 def RMS(mapobjList, centre_world, size, theta_deg, downsample = [None, None]):
     '''
     estimate the background rms from two aspects: covariance and pixel values
+    
+    maps in mapobjList should have same wcs header
+    
     '''
+    bkgRMS = []                 # this is the std calculated from the pixel values
+    bkgSTD = []                 # this is the std calculated from the covariance map
+    for mapobj in mapobjList:
+        pri_mat, wcs_header = mapobj.getHDU('primary')
+        cov_mat, _ = mapobj.getHDU('covariance')
+        x0, y0 = wcs_header.wcs_world2pix(centre_world[0], centre_world[1], 0)
+        pri_mat = stats_tools.maskCut(pri_mat, [x0, y0], size, theta_deg, downsample)
+        cov_mat = stats_tools.maskCut(cov_mat, [x0, y0], size, theta_deg, downsample)
+        bkgSTD.append(np.sqrt(np.nansum(cov_mat)))
+        bkgRMS.append(np.nanstd(pri_mat)) 
+    return bkgRMS, bkgSTD
 
-
-def WeightAverageMap(mapobjList):
+def WeightAverageMap(mapobjList, outputName, outputDir):
     '''
     use multiple maps to generate a weight averaged maps from each feed
     '''
-   
+    fout = outputDir + '/' + outputName
+    if not os.path.exists(outputDir):
+        os.makedirs(outputDir)
+    elif os.path.exists(fout):
+        os.remove(fout)
+
+    pri_matList = []
+    wei_matList = []
+    wcs_header = mapobjList[0].getHDU('primary')[1]
+    for mapobj in mapobjList:
+        pri_matList.append(mapobj.getHDU('primary')[0])
+        wei_matList.append(1/mapobj.getHDU('covariance')[0])
+    final_mat = stats_tools.AddMatrices(pri_matList, wei_matList)
+    grey=fits.PrimaryHDU(final_mat, header= wcs_header.to_header())
+    greyHDU=fits.HDUList([grey])
+    greyHDU.writeto(fout)
+
 if __name__ == '__main__':
-    # mapobj1 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
-    # # mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week12/maps_sig_cuts/feed11_band0/fg4_Feeds11_Band0_PC80.fits')
-    # mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band7.fits')
-    # M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
+    refmap = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
+    mapobj2 = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_FeedsAll_Band0_PCAll.fits')
+    mapobj = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
+    M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
+    M31part = {'centre':np.array([11.0512218, 41.3032980]), 'size':np.array([30,15]), 'theta':120}
     # RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}
     # # print(jackknife(mapobj2, [240,240], 40))
     # # mapobj2.showaper(M31['centre'], M31['size'],M31['theta'])
-    # T_Tplot(mapobj1, [mapobj2], M31['centre'], M31['size'], M31['theta'])
+    # T_Tplot(refmap, [mapobj2], M31part['centre'], M31part['size'], M31part['theta'],[4,4])
     # # T_Tplot(mapobj1, [mapobj2], RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
     # # mapobj2.showaper(RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
     # # mapobj2.showaper(M31['centre'], M31['size'], M31['theta'])
 
-    # plt.show()
-    path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week12/maps_sig_cuts/feed1_band0"
-    # path = f"C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps"
-    refmap = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
-    maplist = getMapList(path, 'attrVal')
-    print(repr([one.getPara('name') for one in maplist]))
     
-    # lis = ['100','20','40','60','80']
-    # print(type(lis[0]))
-    # sortIndex = np.argsort(lis)
-    # print([lis[i] for i in sortIndex])
+    mapobj2.showmap()
+    plt.show()
+    # feed = [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]
+    # maplist = []
+    # for i in feed:
+    #     # path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref5/feed{i}_band0'
+    #     # path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref10/feed{i}_band0'
+    #     # maplist.extend(getMapList(path, 'attrVal'))
+    #     maplist.append(AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref5/feed{i}_band0/fg4_Feeds{i}_Band0_PC20.fits'))
+    # WeightAverageMap(maplist, 'Ref5_FeedsAll_Band0_PC20.fits', 'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps')
 
     

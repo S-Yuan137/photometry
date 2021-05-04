@@ -94,6 +94,24 @@ def maskCut(mat, centre, size, theta_deg, downsample):
     else:
         return newMat
 
+def AddMatrices(matList, weightList):
+    if not len(matList)==len(weightList):
+        print('check the input data length')
+    else:
+        mask = np.isfinite(matList[0]) & np.isfinite(weightList[0])
+        for num, mat in enumerate(matList):
+            mask = mask & np.isfinite(mat) & np.isfinite(weightList[num])
+        masked_mats = []
+        masked_weight = []
+        matrix = []
+        for num, mat in enumerate(matList):
+            masked_mats.append(mat * mask)
+            masked_weight.append(weightList[num] * mask)
+
+        for num, _ in enumerate(masked_mats):
+            matrix.append(masked_mats[num] * masked_weight[num])
+
+        return sum(matrix)/sum(masked_weight)
 
 def pairFrom2mat(mat1, mat2, centre, size, theta_deg, downsample):
     '''
@@ -130,7 +148,12 @@ def pairFrom2mat(mat1, mat2, centre, size, theta_deg, downsample):
 if __name__ == '__main__':
     # temp test
     mat = np.array([[1,2,3],
-                    [4,5,6]])
-    mat = [1,2]
-    print(mat)
-    print(len(mat))   
+                    [4,5,6],
+                    [7,8,9]])
+    mask = np.array([[1,1,1],
+                     [1,1,1],
+                     [1,1,1]])
+    # remask = np.isfinite(mask)
+    # print(mat* remask)
+    print(AddMatrices([mat, mat, mat], [mask, mask, mask]))
+    
