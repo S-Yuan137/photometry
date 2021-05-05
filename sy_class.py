@@ -453,7 +453,7 @@ if __name__ == '__main__':
     PC  = sys.argv[2]
     refmap = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
     mapobj2 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref{Ref}_FeedsAll_Band0_PC{PC}.fits')
-    mapobj2v2 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/AddFeedsMapsVersion2/Ref{Ref}_FeedsAll_Band0_PC{PC}.fits')
+    # mapobj2v2 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/AddFeedsMapsVersion2/Ref{Ref}_FeedsAll_Band0_PC{PC}.fits')
     
     # mapobj = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
     NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
@@ -465,11 +465,11 @@ if __name__ == '__main__':
     # T_Tplot(refmap, [mapobj2], M31part['centre'], M31part['size'], M31part['theta'],[4,4])
     # # T_Tplot(mapobj1, [mapobj2], RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
     # # mapobj2.showaper(RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
-    # mapobj2.showaper(M31['centre'], M31['size'], M31['theta'], 1.2, refmap)
+    mapobj2.showaper(M31part['centre'], M31part['size'], M31part['theta'], 1.2, refmap)
     # refmap.showaper(M31['centre'], M31['size'], M31['theta'], 1.2, refmap)
-    # T_Tplot(refmap, [mapobj2], M31part['centre'], M31part['size'], M31part['theta'], [3,3], 1.2)
-    # plt.show()
-    print(NoiseStd([mapobj2, mapobj2v2], NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
+    T_Tplot(refmap, [mapobj2], M31part['centre'], M31part['size'], M31part['theta'], [3,3], 1.2)
+    plt.show()
+    # print(NoiseStd([mapobj2, mapobj2v2], NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
     
     
     ################ average maps ####################################################################
