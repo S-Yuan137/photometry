@@ -50,14 +50,15 @@ plt.show()
 NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
 feed = [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]
 for i in feed:
-    path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref10/feed{i}_band0'
+    path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref15/feed{i}_band0'
     mapList = sy_class.getMapList(path, 'attrVal')
     std_p, std_c = sy_class.NoiseStd(mapList, NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta'])
     # print([mapone.getPara('name') for mapone in mapList])
     # print(std_p)
+    
+    # print(','.join(map(str, std_c)))
     pc = np.array([20,40,60,80,100])
     print(stats_tools.findMinimaPoint(pc, std_p))
-    # print(','.join(map(str, std_p)))
 
 ##################### Convergence test ############################
 
