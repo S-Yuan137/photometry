@@ -133,10 +133,12 @@ class AstroMap(object):
             ax = fig.add_subplot(subPlot[0],subPlot[1],subPlot[2], projection = wcs_data)
         else:
             ax = plt.subplot(projection=wcs_data)
-        # ax.imshow(mat_data, origin='lower', vmin=np.nanmedian(mat_data)-np.nanstd(mat_data)/10, 
-        #                                      vmax=np.nanmedian(mat_data)+np.nanstd(mat_data)/10,
+        # ax.imshow(mat_data, origin='lower', vmin=np.nanmedian(mat_data)-np.nanstd(mat_data)/15, 
+        #                                      vmax=np.nanmedian(mat_data)+np.nanstd(mat_data)/15,
         #                                      cmap='jet')
-        ax.imshow(mat_data, origin='lower',cmap='jet')
+        h1= ax.imshow(mat_data, vmin = -0.02, vmax = 0.02, origin='lower',cmap='jet')
+        cb = plt.colorbar(h1)
+        cb.set_label('T/K')
         ax.coords['ra'].set_axislabel('Right Ascension')
         ax.coords['dec'].set_axislabel('Declination')
         try:
@@ -173,10 +175,9 @@ class AstroMap(object):
         # vmin = np.nanmedian(mat_data)-np.nanstd(mat_data)/10 
         # vmax = np.nanmedian(mat_data)+np.nanstd(mat_data)/10
         ax2 = fig.add_subplot(122, projection = wcs_cut)
-        ax2.imshow(mat_cut,origin='lower', cmap='jet')
-        # contour has to be sliced as well
-        # colors = 
-        
+        h = ax2.imshow(mat_cut,origin='lower', cmap='jet')
+        cb = plt.colorbar(h)
+        cb.set_label('T/K')
         if refcontour is not None:
             ref_mat, ref_wcs = refcontour.getHDU(hduname)
             ref_x0, ref_y0 = ref_wcs.wcs_world2pix(centre_world[0], centre_world[1], 0)
@@ -194,12 +195,12 @@ class AstroMap(object):
             levels = np.linspace(np.nanmin(mat_cut), np.nanmax(mat_cut), 10)
             print(f'contour levels in the aperSubplot:{levels}') # show the contour levels
             ax2.contour(np.arange(mat_cut.shape[1]), np.arange(mat_cut.shape[0]), mat_cut, colors= 'k', levels=levels,
-                    linewidths=1, smooth=16)
+                    linewidths=1)
         else:
             levels = np.linspace(np.nanmin(mat_cut), np.nanmax(mat_cut), 5)
             print(f'contour levels in the aperSubplot:{levels}') # show the contour levels
             ax2.contour(np.arange(mat_cut.shape[1]), np.arange(mat_cut.shape[0]), mat_cut, colors= 'k', levels=levels,
-                    linewidths=1, smooth=16)
+                    linewidths=1)
         ax2.coords['ra'].set_axislabel('Right Ascension')
         ax2.coords['dec'].set_axislabel('Declination')
 
@@ -366,6 +367,8 @@ def T_Tplot(mapobj1, mapobj2, centre_world, size, theta_deg, downsample = [None,
             data2 = gaussian_filter(data2, sigma= filtersigma)
         list1, list2 = stats_tools.pairFrom2mat(data1,data2, [x0, y0], size, theta_deg, downsample)
         plt.plot(list1, list2,'.', label = map2.getPara('attr'))
+        # plt.plot(list1, list2,'.', label = map2.getPara('feed'))
+
         print(len(list1))
 
     plt.xlabel('Temperature values at 4.85 GHz')
@@ -449,9 +452,11 @@ def WeightAverageMapVersion2(mapobjList, outputName, outputDir):
 
 
 if __name__ == '__main__':
+    '''
     Ref = sys.argv[1]
     PC  = sys.argv[2]
     refmap = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
+    refmaplarge = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_full_on_fg4.fits')
     mapobj2 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref{Ref}_FeedsAll_Band0_PC{PC}.fits')
     # mapobj2v2 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/AddFeedsMapsVersion2/Ref{Ref}_FeedsAll_Band0_PC{PC}.fits')
     
@@ -465,29 +470,30 @@ if __name__ == '__main__':
     # T_Tplot(refmap, [mapobj2], M31part['centre'], M31part['size'], M31part['theta'],[4,4])
     # # T_Tplot(mapobj1, [mapobj2], RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
     # # mapobj2.showaper(RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
-    mapobj2.showaper(M31part['centre'], M31part['size'], M31part['theta'], 1.2, refmap)
-    # refmap.showaper(M31['centre'], M31['size'], M31['theta'], 1.2, refmap)
-    T_Tplot(refmap, [mapobj2], M31part['centre'], M31part['size'], M31part['theta'], [3,3], 1.2)
-    plt.show()
-    # print(NoiseStd([mapobj2, mapobj2v2], NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
-    
+    refmaplarge.showaper(M31['centre'], M31['size'], M31['theta'], 1.2)
+    # refmaplarge.showaper(M31['centre'], M31['size'], M31['theta'], 1.5)
+    # T_Tplot(refmap, [mapobj2], M31part['centre'], M31part['size'], M31part['theta'], [3,3])
+    T_Tplot(refmaplarge, [mapobj2], M31['centre'], M31['size'], M31['theta'], [4,4])
+    # plt.show()
+    # print(NoiseStd([mapobj2], NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
+    '''
     
     ################ average maps ####################################################################
     '''
-    feed = [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]
+    feed = [1,2,3,5,6,9,10,11,12,13,14,15,16,17,18,19]
     maplist = []
     Ref = sys.argv[1]
     PC = sys.argv[2]
 
     for i in feed:
-        path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref{Ref}/feed{i}_band0'
+        path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_BestPC/feed{i}_band0'
         # path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref10/feed{i}_band0'
         maplist.extend(getMapList(path, 'attrVal'))
         # maplist.append(AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref{Ref}/feed{i}_band0/fg4_Feeds{i}_Band0_PC{PC}.fits'))
-    # WeightAverageMap(maplist, f'Ref{Ref}_FeedsAll_Band0_PC{PC}.fits', 'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps')
-    WeightAverageMapVersion2(maplist, f'Ref{Ref}_FeedsAll_Band0_PCAll.fits', 'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/AddFeedsMapsVersion2')
+    WeightAverageMap(maplist, f'Ref{Ref}_FeedsAll-8_Band0_PC{PC}.fits', 'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps')
+    # WeightAverageMapVersion2(maplist, f'Ref{Ref}_FeedsAll_Band0_PCAll.fits', 'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/AddFeedsMapsVersion2')
     '''
-    
+
 
     
     
