@@ -100,8 +100,10 @@ maplist = []
 for feed in [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]:
     path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_BestPC/feed{feed}_band0'
     maplist.extend(sy_class.getMapList(path, 'attrVal'))
+    print(sy_class.NoiseStd(sy_class.getMapList(path, 'attrVal'), NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
 
-print(sy_class.NoiseStd([temp_refmap,temp_refmap2], NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
+
+# print(sy_class.NoiseStd(maplist, NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
 # maplist[0].showaper(M31['centre'], M31['size'],M31['theta'], 1.2, refmap)
 # temp_refmap.showaper(M31['centre'], M31['size'],M31['theta'], 1.2, refmap)
 
@@ -110,7 +112,7 @@ print(sy_class.NoiseStd([temp_refmap,temp_refmap2], NoiseAper['centre'], NoiseAp
     # sy_class.T_Tplot(temp_refmap, [onemap], M31['centre'], M31['size'],M31['theta'], [5,5],1.2)
     # plt.show()
 
-temp_refmap.showaper(M31['centre'], M31['size'],M31['theta'], 1.2, refmapfull)
+# temp_refmap.showaper(M31['centre'], M31['size'],M31['theta'], 1.2, refmapfull)
 # sy_class.plot_map(maplist, 'primary')
 # sy_class.T_Tplot(temp_refmap, [temp_refmap2], M31['centre'], M31['size'],M31['theta'], [5,5],1.2)
 # sy_class.T_Tplot(temp_refmap, [maplist[0]], RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'], [2,2],1.2)
