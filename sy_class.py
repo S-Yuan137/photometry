@@ -457,14 +457,14 @@ def WeightAverageMapVersion2(mapobjList, outputName, outputDir):
 
 
 if __name__ == '__main__':
-    
+    '''
     # Ref = sys.argv[1]
     # PC  = sys.argv[2]
     refmap = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
     refmaplarge = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_full_on_fg4.fits')
     # mapobj2 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref{Ref}_FeedsAll_Band0_PC{PC}.fits')
     # mapobj2v2 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/AddFeedsMapsVersion2/Ref{Ref}_FeedsAll_Band0_PC{PC}.fits')
-    tempmap = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_Feeds3-6-10-11-12-14-15-17_Band0_PCbest.fits')
+    # tempmap = getMapList(f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_sig_cuts_allfeed_PCcut', 'attrVal')
     # mapobj = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week10/maps/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0.fits')
     NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
     M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
@@ -476,18 +476,20 @@ if __name__ == '__main__':
     # T_Tplot(refmap, [mapobj2], M31part['centre'], M31part['size'], M31part['theta'],[4,4])
     # # T_Tplot(mapobj1, [mapobj2], RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
     # # mapobj2.showaper(RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'])
-    tempmap.showaper(M31['centre'], M31['size'], M31['theta'], 1.2, refmap)
+    # tempmap.showaper(M31['centre'], M31['size'], M31['theta'], 1.2, refmap)
     # refmaplarge.showaper(M31['centre'], M31['size'], M31['theta'], 1.5)
     # T_Tplot(refmap, [tempmap], M31part2['centre'], M31part2['size'], M31part2['theta'], [1,1])
-    T_Tplot(refmaplarge, [tempmap], M31['centre'], M31['size'], M31['theta'], [4,4])
+    # T_Tplot(refmap, tempmap, M31['centre'], M31['size'], M31['theta'], [4,4])
     # plt.show()
     # print(NoiseStd([mapobj2], NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
-    
-    
-    ################ average maps ####################################################################
+    mapallfeed1 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_FeedsAll_Band0_PC60.fits')
+    mapallfeed2 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_sig_cuts_allfeed_PCcut/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0_PC60.fits')
+    T_Tplot(mapallfeed1, [mapallfeed2],M31['centre'], M31['size'], M31['theta'], [4,4])
     '''
+    ################ average maps ####################################################################
+    
     # feed = [1,2,3,5,6,9,10,11,12,13,14,15,16,17,18,19]
-    feed = [6,11,15,17]
+    feed = [2,5]
     maplist = []
     Ref = 10
     PC = 'best'
@@ -497,20 +499,24 @@ if __name__ == '__main__':
         # path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref10/feed{i}_band0'
         maplist.extend(getMapList(path, 'attrVal'))
         # maplist.append(AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref{Ref}/feed{i}_band0/fg4_Feeds{i}_Band0_PC{PC}.fits'))
-    WeightAverageMap(maplist, f'Ref{Ref}_Feeds6-11-15-17_Band0_PC{PC}.fits', 'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps')
+    feedstr = '-'.join(map(str, feed))
+    WeightAverageMap(maplist, f'Ref{Ref}_Feeds{feedstr}_Band0_PC{PC}.fits', 'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps')
     # WeightAverageMapVersion2(maplist, f'Ref{Ref}_FeedsAll_Band0_PCAll.fits', 'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/AddFeedsMapsVersion2')
     
 
 
     ################### noise calculation ###############################################################
     
-    
-    # NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
-    # # tempmap = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_FeedsAll_Band0_PC100.fits')
-    # maplist = getMapList(f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_alpha_cuts/feed{feed}_band0', 'attrVal')
-    
-    # print(NoiseStd(maplist,NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
     '''
+    NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
+    # # tempmap = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_FeedsAll_Band0_PC100.fits')
+    for i in [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]:
+        maplist = getMapList(f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_alpha_cuts/feed{i}_band0', 'attrVal')
+        std = NoiseStd(maplist,NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta'])
+        print(','.join(map(str, std)))
+    
+    '''
+  
 
 
     
