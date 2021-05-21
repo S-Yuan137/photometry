@@ -83,6 +83,9 @@ def ordinary_least_squares_err(X,Y,Y_err):
     return beta1_rms, beta0_rms
 
 def maskCut(mat, centre, size, theta_deg, downsample):
+    '''
+    note the mask is not downsampled, thus the edges of aperture is not exactly right
+    '''
     a_ellipse, b_ellipse = (size[0], size[1])
     centre_pix = [(centre[0], centre[1])]
     theta = theta_deg * (np.pi/180)
