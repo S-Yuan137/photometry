@@ -47,20 +47,20 @@ plt.show()
 
 ############### sigma_f^2 percentage cut off #####################
 
-NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
-feed = [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]
-for i in feed:
-    # path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref15/feed{i}_band0'
-    # path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_sig_cuts_band4/feed{i}_band4'
-    path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_band4_BestPC/feed{i}_band4'
-    mapList = sy_class.getMapList(path, 'attrVal')
-    std_p= sy_class.NoiseStd(mapList, NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta'])
-    # print([mapone.getPara('name') for mapone in mapList])
-    print(std_p)
+# NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
+# feed = [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]
+# for i in feed:
+#     # path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_ref15/feed{i}_band0'
+#     # path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_sig_cuts_band4/feed{i}_band4'
+#     path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_band4_BestPC/feed{i}_band4'
+#     mapList = sy_class.getMapList(path, 'attrVal')
+#     std_p= sy_class.NoiseStd(mapList, NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta'])
+#     # print([mapone.getPara('name') for mapone in mapList])
+#     print(std_p)
     
-    # print(','.join(map(str, std_p)))
-    # pc = np.array([20,40,60,80,100])
-    # print(stats_tools.findMinimaPoint(pc, std_p))
+#     # print(','.join(map(str, std_p)))
+#     # pc = np.array([20,40,60,80,100])
+#     # print(stats_tools.findMinimaPoint(pc, std_p))
 
 ##################### Convergence test ############################
 
@@ -91,32 +91,15 @@ for i in feed:
 # refmap = sy_class.AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
 # refmapfull = sy_class.AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_full_on_fg4.fits')
 
-# temp_refmap = sy_class.AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_FeedsAll-8_Band0_PCbest.fits')
-# temp_refmap2 = sy_class.AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_FeedsAll_Band0_PCbest.fits')
 
 # M31 ={'centre':np.array([10.6836, 41.2790]), 'size':np.array([60,20]), 'theta':127}
 # RG5C3_50 = {'centre':np.array([9.6076856,41.6096426]), 'size':np.array([6,6]), 'theta':0}
 # NoiseAper = {'centre':np.array([12.7452212, 40.4682106]), 'size': np.array([17, 5]), 'theta' : 0}
 
-# maplist = []
-# for feed in [1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,18,19]:
-#     path = f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/maps_sig_cuts_BestPC/feed{feed}_band0'
-#     maplist.extend(sy_class.getMapList(path, 'attrVal'))
-#     print(sy_class.NoiseStd(sy_class.getMapList(path, 'attrVal'), NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
-
-
-# print(sy_class.NoiseStd(maplist, NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
-# maplist[0].showaper(M31['centre'], M31['size'],M31['theta'], 1.2, refmap)
-# temp_refmap.showaper(M31['centre'], M31['size'],M31['theta'], 1.2, refmap)
-
-# for onemap in maplist:
-#     onemap.showaper(M31['centre'], M31['size'],M31['theta'], 1.2, refmap)
-    # sy_class.T_Tplot(temp_refmap, [onemap], M31['centre'], M31['size'],M31['theta'], [5,5],1.2)
-    # plt.show()
-
-# temp_refmap.showaper(M31['centre'], M31['size'],M31['theta'], 1.2, refmapfull)
-# sy_class.plot_map(maplist, 'primary')
-# sy_class.T_Tplot(temp_refmap, [temp_refmap2], M31['centre'], M31['size'],M31['theta'], [5,5],1.2)
-# sy_class.T_Tplot(temp_refmap, [maplist[0]], RG5C3_50['centre'], RG5C3_50['size'], RG5C3_50['theta'], [2,2],1.2)
+# tempMaplist = sy_class.getMapList('C:/Users/Shibo/Desktop/temp', 'attrVal')
+# # tempMap = sy_class.AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_sig_cuts_allfeed_PCcut/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0_PC58.fits')
+# tempMap = sy_class.AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_Feeds1-9-10-11-19_Band0_PCbest.fits')
+# tempMap.showaper(M31['centre'], M31['size'], M31['theta'], 1.2, refmap)
+# sy_class.T_Tplot(refmap, [tempMap], M31['centre'], M31['size'], M31['theta'], [4,4],1.2)
 
 # plt.show()

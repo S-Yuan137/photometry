@@ -296,7 +296,7 @@ def photometry(mapobj, centre, a_ellipse, b_ellipse, theta_deg, annulus_width):
     distance_annu_aper = 5  # the distance between the aperture and the annulus in units of pixels
     theta = theta_deg * (np.pi/180)
     pri_data, wcs_data = mapobj.getHDU('primary')
-    cov_data,_ = mapobj.getHDU('covariance')
+    # cov_data,_ = mapobj.getHDU('covariance')
     
     Freq = np.nanmean(mapobj.getPara('freq'))
     x_pix,y_pix = wcs_data.wcs_world2pix(centre[0],centre[1],0)
@@ -316,16 +316,16 @@ def photometry(mapobj, centre, a_ellipse, b_ellipse, theta_deg, annulus_width):
         bkg_median.append(median_sigclip)
         # bkg_std.append(np.nanstd(annulus_data_1d))
     bkg_median = np.array(bkg_median)
-    for t_mask in temp_mask:
-        cov_mat1 = t_mask.multiply(cov_data)[t_mask.data>0]
-        bkg_std.append(np.sqrt(np.nansum(cov_mat1)))
-    bkg_std = np.array(bkg_std) 
+    # for t_mask in temp_mask:
+    #     # cov_mat1 = t_mask.multiply(cov_data)[t_mask.data>0]
+    #     # bkg_std.append(np.sqrt(np.nansum(cov_mat1)))
+    # bkg_std = np.array(bkg_std) 
     phot_table = aperture_photometry(pri_data, aperture)
     phot_table['annulus_median'] = bkg_median
     phot_table['aper_bkg'] = bkg_median * aperture.area
     phot_table['aper_sum_bkgsub'] = phot_table['aperture_sum'] - phot_table['aper_bkg']
     phot_table['aper_sum_bkgsub_Jy'] = T2flux(phot_table['aper_sum_bkgsub'], Freq)
-    phot_table['bkg_rms_Jy']= T2flux(bkg_std,Freq)
+    phot_table['bkg_rms_Jy']= T2flux(bkg_median ,Freq)
 
     for col in phot_table.colnames:
         phot_table[col].info.format = '%.8g'  # for consistent table output
