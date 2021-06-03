@@ -177,6 +177,7 @@ class AstroMap(object):
         # vmax = np.nanmedian(mat_data)+np.nanstd(mat_data)/10
         ax2 = fig.add_subplot(122, projection = wcs_cut)
         h = ax2.imshow(mat_cut,origin='lower', cmap='jet')
+        # h = ax2.imshow(mat_cut,vmin=-0.010, vmax=-0.005,origin='lower', cmap='jet')
         cb = plt.colorbar(h)
         cb.set_label('T/K')
         if refcontour is not None:
@@ -458,7 +459,7 @@ def WeightAverageMapVersion2(mapobjList, outputName, outputDir):
 
 
 if __name__ == '__main__':
-    '''
+    
     # Ref = sys.argv[1]
     # PC  = sys.argv[2]
     refmap = AstroMap('C:/Users/Shibo/Desktop/COMAP-sem2/week11/m31cm6i_3min_ss_on_fg4.fits')
@@ -484,10 +485,12 @@ if __name__ == '__main__':
     # plt.show()
     # print(NoiseStd([mapobj2], NoiseAper['centre'], NoiseAper['size'], NoiseAper['theta']))
     # mapallfeed1 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_FeedsAll_Band0_PC58.fits')
-    tempmap1 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_Feeds1-9-10-11-19_Band0_PCbest.fits')
+    # tempmap1 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week13/AddFeedsMaps/Ref10_FeedsAll-8_Band0_PCbest.fits')
+    # tempmap1.showaper(M31['centre'], M31['size'],M31['theta'],1.2, refmap)
+    tempmap1 = AstroMap(f'C:/Users/Shibo/Desktop/COMAP-sem2/week14/maps_sig_cuts_allfeed_PCcut/fg4_Feeds1-2-3-5-6-8-9-10-11-12-13-14-15-16-17-18-19_Band0_PC100.fits')
     tempmap1.showaper(M31['centre'], M31['size'],M31['theta'],1.2, refmap)
     T_Tplot(refmap, [tempmap1],M31['centre'], M31['size'], M31['theta'], [4,4])
-    '''
+    
     
 
 
